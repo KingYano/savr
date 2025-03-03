@@ -2,18 +2,19 @@ export interface Movement {
     id: number;
     name: string;
     amount: number;
-    date: string;
-    type: 'expense' | 'income';
+    date: Date;
+    type: "expense" | "income";
     isRecurrent: boolean;
+    imageUrl?: string;
 }
 
 export interface NewMovement {
     name: string;
-    amount: string;
-    date: string;
-    type: 'expense' | 'income';
-    recurrenceType: 'none' | 'monthly' | 'split';
-    splitMonths: number;
+    amount: number;
+    date: string | Date;
+    type: "expense" | "income";
+    isRecurrent: boolean;
+    imageUrl?: string;
 }
 
 export interface BalanceProps {

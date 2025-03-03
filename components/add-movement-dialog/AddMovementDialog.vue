@@ -1,11 +1,9 @@
-<!-- components/AddMovementDialog.vue -->
 <template>
   <Dialog :open="isOpen" @update:open="$emit('update:isOpen', $event)">
     <DialogContent :class="[
       'p-0 w-full max-w-[500px]',
       isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-slate-200'
     ]">
-      <!-- Header -->
       <DialogHeader :class="[
         'p-6 border-b',
         isDarkMode ? 'border-gray-800' : 'border-slate-200'
@@ -18,9 +16,7 @@
         </DialogTitle>
       </DialogHeader>
 
-      <!-- Content -->
       <div class="p-6 space-y-6">
-        <!-- Type de mouvement -->
         <div class="space-y-3">
           <label :class="[
             'text-sm font-medium',
@@ -57,7 +53,6 @@
           </div>
         </div>
 
-        <!-- Informations de base -->
         <div class="space-y-4">
           <div class="space-y-2">
             <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Nom</label>
@@ -90,16 +85,54 @@
           <div class="space-y-2">
             <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Date</label>
             <Input
-                v-model="newMovement.date"
+                v-model="dateString"
                 type="date"
                 :class="[
                 isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
               ]"
             />
           </div>
+
+          <div class="space-y-2">
+            <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Image (optionnel)</label>
+            <div class="flex items-center gap-2">
+              <input
+                  type="file"
+                  id="image"
+                  accept="image/*"
+                  @change="handleImageUpload"
+                  class="hidden"
+                  ref="fileInput"
+              />
+              <button
+                  type="button"
+                  @click="$refs.fileInput.click()"
+                  :class="[
+                  'px-4 py-2 rounded-md flex items-center gap-2',
+                  isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                ]"
+              >
+                <span>Choisir une image</span>
+              </button>
+              <span class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">
+                {{ imageFileName || 'Aucun fichier sélectionné' }}
+              </span>
+            </div>
+
+            <div v-if="previewUrl" class="mt-2 relative">
+              <img :src="previewUrl" alt="Prévisualisation" class="h-24 w-auto object-cover rounded-md" />
+              <button
+                  type="button"
+                  @click="removeImage"
+                  class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+              >
+                <span class="sr-only">Supprimer</span>
+                <span class="block h-4 w-4 flex items-center justify-center">×</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Type de récurrence -->
         <div class="space-y-3">
           <label :class="[
             'text-sm font-medium',
@@ -112,11 +145,11 @@
                 variant="outline"
                 :class="[
                 'justify-start',
-                newMovement.recurrenceType === 'none'
+                !newMovement.isRecurrent
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
                   : ''
               ]"
-                @click="newMovement.recurrenceType = 'none'"
+                @click="newMovement.isRecurrent = false"
             >
               <span class="mr-2">🔄</span> Pas de récurrence
             </Button>
@@ -124,51 +157,18 @@
                 variant="outline"
                 :class="[
                 'justify-start',
-                newMovement.recurrenceType === 'monthly'
+                newMovement.isRecurrent
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
                   : ''
               ]"
-                @click="newMovement.recurrenceType = 'monthly'"
+                @click="newMovement.isRecurrent = true"
             >
               <span class="mr-2">📅</span> Mensuel
             </Button>
-            <Button
-                variant="outline"
-                :class="[
-                'justify-start',
-                newMovement.recurrenceType === 'split'
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                  : ''
-              ]"
-                @click="newMovement.recurrenceType = 'split'"
-            >
-              <span class="mr-2">📎</span> Paiement échelonné
-            </Button>
-          </div>
-        </div>
-
-        <!-- Options de paiement échelonné -->
-        <div v-if="newMovement.recurrenceType === 'split'" class="space-y-2">
-          <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Nombre de mois</label>
-          <div class="relative w-full">
-            <select
-                v-model="newMovement.splitMonths"
-                :class="[
-                'w-full h-10 px-3 rounded-md border',
-                isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
-              ]"
-            >
-              <option value="2">2 mois</option>
-              <option value="3">3 mois</option>
-              <option value="4">4 mois</option>
-              <option value="6">6 mois</option>
-              <option value="12">12 mois</option>
-            </select>
           </div>
         </div>
       </div>
 
-      <!-- Footer -->
       <DialogFooter :class="[
         'p-6 border-t',
         isDarkMode ? 'border-gray-800' : 'border-slate-200'
@@ -185,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import type { AddMovementDialogProps, NewMovement } from '@/types/finance';
 import {
   Dialog,
@@ -200,18 +200,66 @@ import { Input } from '@/components/ui/input';
 const props = defineProps<AddMovementDialogProps>();
 const emit = defineEmits(['update:isOpen', 'addMovement']);
 
+const fileInput = ref<HTMLInputElement | null>(null);
+const previewUrl = ref<string>('');
+const imageFileName = ref<string>('');
+const imageFile = ref<File | null>(null);
+const dateString = ref('');
+
 const newMovement = ref<NewMovement>({
   name: '',
-  amount: '',
+  amount: 0,
   date: '',
   type: 'expense',
-  recurrenceType: 'none',
-  splitMonths: 2,
+  isRecurrent: false,
+  imageUrl: '',
 });
+
+watch(dateString, (newValue) => {
+  newMovement.value.date = newValue;
+});
+
+const handleImageUpload = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    const file = input.files[0];
+    imageFile.value = file;
+    imageFileName.value = file.name;
+
+    // Convertir l'image en base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target) {
+        previewUrl.value = e.target.result as string;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const removeImage = () => {
+  previewUrl.value = '';
+  imageFileName.value = '';
+  imageFile.value = null;
+  newMovement.value.imageUrl = '';
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+};
 
 const handleAddMovement = () => {
   if (!newMovement.value.name || !newMovement.value.amount || !newMovement.value.date) {
     return;
+  }
+
+  // Ajouter l'URL de l'image si disponible (déjà en base64)
+  if (previewUrl.value && previewUrl.value.length > 0) {
+    newMovement.value.imageUrl = previewUrl.value;
+
+    // Vérifier que ce n'est pas une URL Blob
+    if (newMovement.value.imageUrl.startsWith('blob:')) {
+      console.error('URL Blob détectée, conversion en base64 nécessaire');
+    }
   }
 
   emit('addMovement', { ...newMovement.value });
@@ -219,11 +267,15 @@ const handleAddMovement = () => {
   // Reset form
   newMovement.value = {
     name: '',
-    amount: '',
+    amount: 0,
     date: '',
     type: 'expense',
-    recurrenceType: 'none',
-    splitMonths: 2,
+    isRecurrent: false,
+    imageUrl: '',
   };
+  dateString.value = '';
+
+  // Réinitialiser l'image
+  removeImage();
 };
 </script>

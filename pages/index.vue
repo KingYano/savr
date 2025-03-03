@@ -29,26 +29,32 @@
         </button>
       </div>
 
-      <BalanceCard
-          :movements="financeData.movements.value || []"
-          :selected-month="currentMonth"
-          :is-dark-mode="isDarkMode"
-      />
+      <ClientOnly>
+        <BalanceCard
+            :movements="financeData.movements.value || []"
+            :selected-month="currentMonth"
+            :is-dark-mode="isDarkMode"
+        />
+      </ClientOnly>
 
-      <FinanceCalendar
-          :movements="financeData.movements.value || []"
-          :selected-date="selectedDate"
-          :current-month="currentMonth"
-          :is-dark-mode="isDarkMode"
-          @update:selected-date="selectedDate = $event"
-          @update:current-month="currentMonth = $event"
-      />
+      <ClientOnly>
+        <FinanceCalendar
+            :movements="financeData.movements.value || []"
+            :selected-date="selectedDate"
+            :current-month="currentMonth"
+            :is-dark-mode="isDarkMode"
+            @update:selected-date="selectedDate = $event"
+            @update:current-month="currentMonth = $event"
+        />
+      </ClientOnly>
 
-      <MovementsList
-          :movements="financeData.movements.value || []"
-          :selected-date="selectedDate"
-          :is-dark-mode="isDarkMode"
-      />
+      <ClientOnly>
+        <MovementsList
+            :movements="financeData.movements.value || []"
+            :selected-date="selectedDate"
+            :is-dark-mode="isDarkMode"
+        />
+      </ClientOnly>
     </div>
 
     <button

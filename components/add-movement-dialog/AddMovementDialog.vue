@@ -1,23 +1,23 @@
 <template>
   <Dialog :open="isOpen" @update:open="$emit('update:isOpen', $event)">
     <DialogContent :class="[
-      'p-0 w-full max-w-[500px]',
+      'p-0 w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto',
       isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-slate-200'
     ]">
       <DialogHeader :class="[
-        'p-6 border-b',
-        isDarkMode ? 'border-gray-800' : 'border-slate-200'
+        'sticky top-0 z-10 p-4 sm:p-6 border-b',
+        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-slate-200 bg-white'
       ]">
         <DialogTitle :class="[
-          'text-2xl font-semibold',
+          'text-xl sm:text-2xl font-semibold',
           isDarkMode ? 'text-white' : 'text-slate-900'
         ]">
           Ajouter un mouvement
         </DialogTitle>
       </DialogHeader>
 
-      <div class="p-6 space-y-6">
-        <div class="space-y-3">
+      <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div class="space-y-2 sm:space-y-3">
           <label :class="[
             'text-sm font-medium',
             isDarkMode ? 'text-white' : 'text-slate-900'
@@ -28,7 +28,7 @@
             <button
                 type="button"
                 :class="[
-                'w-full px-4 py-2 rounded-md',
+                'w-full px-3 py-2 rounded-md text-sm sm:text-base',
                 newMovement.type === 'expense'
                   ? 'bg-red-500 hover:bg-red-600 text-white'
                   : 'border bg-slate-100',
@@ -41,7 +41,7 @@
             <button
                 type="button"
                 :class="[
-                'w-full px-4 py-2 rounded-md',
+                'w-full px-3 py-2 rounded-md text-sm sm:text-base',
                 newMovement.type === 'income'
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
                   : 'border bg-slate-100'
@@ -53,8 +53,8 @@
           </div>
         </div>
 
-        <div class="space-y-4">
-          <div class="space-y-2">
+        <div class="space-y-3 sm:space-y-4">
+          <div class="space-y-1 sm:space-y-2">
             <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Nom</label>
             <Input
                 v-model="newMovement.name"
@@ -66,7 +66,7 @@
             />
           </div>
 
-          <div class="space-y-2">
+          <div class="space-y-1 sm:space-y-2">
             <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Montant</label>
             <div class="relative">
               <Input
@@ -82,7 +82,7 @@
             </div>
           </div>
 
-          <div class="space-y-2">
+          <div class="space-y-1 sm:space-y-2">
             <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Date</label>
             <Input
                 v-model="dateString"
@@ -93,9 +93,9 @@
             />
           </div>
 
-          <div class="space-y-2">
+          <div class="space-y-1 sm:space-y-2">
             <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Image (optionnel)</label>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <input
                   type="file"
                   id="image"
@@ -108,7 +108,7 @@
                   type="button"
                   @click="$refs.fileInput.click()"
                   :class="[
-                  'px-4 py-2 rounded-md flex items-center gap-2',
+                  'px-3 py-2 rounded-md flex items-center gap-1 text-sm sm:text-base',
                   isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 ]"
               >
@@ -124,16 +124,15 @@
               <button
                   type="button"
                   @click="removeImage"
-                  class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                  class="absolute top-1 right-1 bg-red-500 text-white rounded-full "
               >
-                <span class="sr-only">Supprimer</span>
-                <span class="block h-4 w-4 flex items-center justify-center">×</span>
+                <span class="items-center justify-center"><CircleX/></span>
               </button>
             </div>
           </div>
         </div>
 
-        <div class="space-y-3">
+        <div class="space-y-2 sm:space-y-3">
           <label :class="[
             'text-sm font-medium',
             isDarkMode ? 'text-white' : 'text-slate-900'
@@ -144,7 +143,7 @@
             <Button
                 variant="outline"
                 :class="[
-                'justify-start',
+                'justify-start py-1 sm:py-2 text-sm sm:text-base',
                 !newMovement.isRecurrent
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
                   : ''
@@ -156,7 +155,7 @@
             <Button
                 variant="outline"
                 :class="[
-                'justify-start',
+                'justify-start py-1 sm:py-2 text-sm sm:text-base',
                 newMovement.isRecurrent
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
                   : ''
@@ -170,8 +169,8 @@
       </div>
 
       <DialogFooter :class="[
-        'p-6 border-t',
-        isDarkMode ? 'border-gray-800' : 'border-slate-200'
+        'sticky bottom-0 z-10 p-4 sm:p-6 border-t',
+        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-slate-200 bg-white'
       ]">
         <Button
             class="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
@@ -185,7 +184,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 import type { AddMovementDialogProps, NewMovement } from '@/types/finance';
 import {
   Dialog,
@@ -196,6 +194,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CircleX } from 'lucide-vue-next'
+
 
 const props = defineProps<AddMovementDialogProps>();
 const emit = defineEmits(['update:isOpen', 'addMovement']);
@@ -226,7 +226,6 @@ const handleImageUpload = (event: Event) => {
     imageFile.value = file;
     imageFileName.value = file.name;
 
-    // Convertir l'image en base64
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target) {
@@ -252,11 +251,9 @@ const handleAddMovement = () => {
     return;
   }
 
-  // Ajouter l'URL de l'image si disponible (déjà en base64)
   if (previewUrl.value && previewUrl.value.length > 0) {
     newMovement.value.imageUrl = previewUrl.value;
 
-    // Vérifier que ce n'est pas une URL Blob
     if (newMovement.value.imageUrl.startsWith('blob:')) {
       console.error('URL Blob détectée, conversion en base64 nécessaire');
     }
@@ -264,7 +261,6 @@ const handleAddMovement = () => {
 
   emit('addMovement', { ...newMovement.value });
 
-  // Reset form
   newMovement.value = {
     name: '',
     amount: 0,
@@ -275,7 +271,6 @@ const handleAddMovement = () => {
   };
   dateString.value = '';
 
-  // Réinitialiser l'image
   removeImage();
 };
 </script>

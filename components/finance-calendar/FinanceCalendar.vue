@@ -76,8 +76,8 @@
 
           <div class="flex-1 mt-1">
             <div class="hidden md:flex flex-wrap gap-1">
-              <template v-for="(movement, index) in getDayMovements(day.date).slice(0, 4)" :key="`desktop-${movement.id}`">
-                <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+              <template v-for="(movement) in getDayMovements(day.date).slice(0, 4)" :key="`desktop-${movement.id}`">
+                <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 border" :class="[movement.type === 'income' ? 'border-green-600' : 'border-red-600']">
                   <img v-if="movement.imageUrl && movement.imageUrl.length > 0"
                        :src="movement.imageUrl"
                        alt=""
@@ -98,9 +98,8 @@
               </div>
             </div>
 
-            <!-- Affichage mobile : maximum 2 icônes -->
             <div class="flex md:hidden flex-wrap gap-1">
-              <template v-for="(movement, index) in getDayMovements(day.date).slice(0, 2)" :key="`mobile-${movement.id}`">
+              <template v-for="(movement) in getDayMovements(day.date).slice(0, 2)" :key="`mobile-${movement.id}`">
                 <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                   <img v-if="movement.imageUrl && movement.imageUrl.length > 0"
                        :src="movement.imageUrl"

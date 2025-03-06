@@ -6,6 +6,7 @@ export interface Movement {
     type: "expense" | "income";
     isRecurrent: boolean;
     imageUrl?: string;
+    isGeneratedRecurrence?: boolean;
 }
 
 export interface NewMovement {

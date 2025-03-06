@@ -16,7 +16,8 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-4 pt-2 border-t" :class="isDarkMode ? 'border-gray-800' : 'border-slate-200'">
+        <!-- Version desktop: 3 colonnes -->
+        <div class="hidden md:grid grid-cols-3 gap-4 pt-2 border-t" :class="isDarkMode ? 'border-gray-800' : 'border-slate-200'">
           <div class="space-y-1">
             <div class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-slate-600'">
               Entrées
@@ -40,6 +41,36 @@
               Récurrences
             </div>
             <div class="font-bold text-xl" :class="isDarkMode ? 'text-amber-400' : 'text-amber-500'">
+              {{ formatCurrency(monthSummary.recurrent) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Version mobile: empilée -->
+        <div class="md:hidden flex flex-col space-y-3 pt-2 border-t" :class="isDarkMode ? 'border-gray-800' : 'border-slate-200'">
+          <div class="flex justify-between items-center">
+            <div class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-slate-600'">
+              Entrées
+            </div>
+            <div class="font-bold text-lg text-emerald-500">
+              {{ formatCurrency(monthSummary.income) }}
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <div class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-slate-600'">
+              Sorties
+            </div>
+            <div class="font-bold text-lg text-rose-500">
+              {{ formatCurrency(monthSummary.expense) }}
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <div class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-slate-600'">
+              Récurrences
+            </div>
+            <div class="font-bold text-lg" :class="isDarkMode ? 'text-amber-400' : 'text-amber-500'">
               {{ formatCurrency(monthSummary.recurrent) }}
             </div>
           </div>

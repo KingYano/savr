@@ -77,46 +77,72 @@
           <div class="flex-1 mt-1">
             <div class="hidden md:flex flex-wrap gap-1">
               <template v-for="(movement) in getDayMovements(day.date).slice(0, 4)" :key="`desktop-${movement.id}`">
-                <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 border" :class="[movement.type === 'income' ? 'border-green-600' : 'border-red-600']">
+                <div style="position: relative; width: 28px; height: 28px;"
+                     class="rounded-full"
+                     :style="movement.type === 'income'
+                         ? (isDarkMode ? 'background-color: rgb(22, 101, 52);' : 'background-color: rgb(220, 252, 231);')
+                         : (isDarkMode ? 'background-color: rgb(153, 27, 27);' : 'background-color: rgb(254, 226, 226);')">
                   <img v-if="movement.imageUrl && movement.imageUrl.length > 0"
                        :src="movement.imageUrl"
                        alt=""
-                       class="w-full h-full object-cover cursor-pointer"
+                       class="rounded-full"
+                       style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
                        @click.stop="openImagePreview(movement.imageUrl)" />
-                  <div v-else :class="[
-                   'w-full h-full flex items-center justify-center text-white text-xs',
-                   movement.type === 'income' ? 'bg-green-600' : 'bg-red-600'
-                 ]">
-                    {{ movement.type === 'income' ? '↑' : '↓' }}
+                  <ArrowDownCircle v-else-if="movement.type === 'expense'"
+                                   class="w-4 h-4"
+                                   :class="isDarkMode ? 'text-red-200' : 'text-red-500'"
+                                   style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" />
+                  <ArrowUpCircle v-else
+                                 class="w-4 h-4"
+                                 :class="isDarkMode ? 'text-green-200' : 'text-green-500'"
+                                 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" />
+
+                  <div v-if="movement.isRecurrent || movement.isGeneratedRecurrence"
+                       style="position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background-color: rgb(251, 191, 36); border-radius: 50%; border: 1px solid white; z-index: 10; display: flex; align-items: center; justify-content: center;">
+                    <Repeat class="w-3 h-3 text-white" />
                   </div>
                 </div>
               </template>
 
               <div v-if="getDayMovements(day.date).length > 4"
-                   class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">
+                   class="rounded-full"
+                   style="width: 28px; height: 28px; background-color: rgb(37, 99, 235); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem;">
                 +{{ getDayMovements(day.date).length - 4 }}
               </div>
             </div>
 
             <div class="flex md:hidden flex-wrap gap-1">
               <template v-for="(movement) in getDayMovements(day.date).slice(0, 2)" :key="`mobile-${movement.id}`">
-                <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                <div style="position: relative; width: 24px; height: 24px;"
+                     class="rounded-full"
+                     :style="movement.type === 'income'
+                         ? (isDarkMode ? 'background-color: rgb(22, 101, 52);' : 'background-color: rgb(220, 252, 231);')
+                         : (isDarkMode ? 'background-color: rgb(153, 27, 27);' : 'background-color: rgb(254, 226, 226);')">
                   <img v-if="movement.imageUrl && movement.imageUrl.length > 0"
                        :src="movement.imageUrl"
                        alt=""
-                       class="w-full h-full object-cover cursor-pointer"
+                       class="rounded-full"
+                       style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
                        @click.stop="openImagePreview(movement.imageUrl)" />
-                  <div v-else :class="[
-                   'w-full h-full flex items-center justify-center text-white text-[8px]',
-                   movement.type === 'income' ? 'bg-green-600' : 'bg-red-600'
-                 ]">
-                    {{ movement.type === 'income' ? '↑' : '↓' }}
+                  <ArrowDownCircle v-else-if="movement.type === 'expense'"
+                                   class="w-4 h-4"
+                                   :class="isDarkMode ? 'text-red-200' : 'text-red-500'"
+                                   style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" />
+                  <ArrowUpCircle v-else
+                                 class="w-4 h-4"
+                                 :class="isDarkMode ? 'text-green-200' : 'text-green-500'"
+                                 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" />
+
+                  <div v-if="movement.isRecurrent || movement.isGeneratedRecurrence"
+                       style="position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; background-color: rgb(251, 191, 36); border-radius: 50%; border: 1px solid white; z-index: 10; display: flex; align-items: center; justify-content: center;">
+                    <Repeat class="w-2 h-2 text-white" />
                   </div>
                 </div>
               </template>
 
               <div v-if="getDayMovements(day.date).length > 2"
-                   class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-[8px]">
+                   class="rounded-full"
+                   style="width: 24px; height: 24px; background-color: rgb(37, 99, 235); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.625rem;">
                 +{{ getDayMovements(day.date).length - 2 }}
               </div>
             </div>
@@ -142,104 +168,101 @@
 </template>
 
 <script setup>
-  import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
-  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-  import { Button } from '@/components/ui/button';
+import {ChevronLeft, ChevronRight, Repeat, ArrowUpCircle, ArrowDownCircle} from 'lucide-vue-next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useFinance } from '~/composables/useFinance';
 
-  const props = defineProps({
-    movements: Array,
-    selectedDate: Date,
-    currentMonth: Date,
-    isDarkMode: Boolean
-  });
+const props = defineProps({
+  movements: Array,
+  selectedDate: Date,
+  currentMonth: Date,
+  isDarkMode: Boolean
+});
 
-  const emit = defineEmits(['update:selected-date', 'update:current-month']);
+const emit = defineEmits(['update:selected-date', 'update:current-month']);
 
-  const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-  const internalCurrentMonth = ref(new Date(props.currentMonth));
-  const previewImageUrl = ref('');
+const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const internalCurrentMonth = ref(new Date(props.currentMonth));
+const previewImageUrl = ref('');
+const financeData = useFinance();
 
-  watch(() => props.currentMonth, (newValue) => {
-    internalCurrentMonth.value = new Date(newValue);
-  });
+watch(() => props.currentMonth, (newValue) => {
+  internalCurrentMonth.value = new Date(newValue);
+});
 
-  const calendarDays = computed(() => {
-    const year = internalCurrentMonth.value.getFullYear();
-    const month = internalCurrentMonth.value.getMonth();
+const calendarDays = computed(() => {
+  const year = internalCurrentMonth.value.getFullYear();
+  const month = internalCurrentMonth.value.getMonth();
 
-    const firstDayOfMonth = new Date(year, month, 1);
+  const firstDayOfMonth = new Date(year, month, 1);
 
-    let firstDayOfWeek = firstDayOfMonth.getDay();
-    if (firstDayOfWeek === 0) firstDayOfWeek = 7;
+  let firstDayOfWeek = firstDayOfMonth.getDay();
+  if (firstDayOfWeek === 0) firstDayOfWeek = 7;
 
-    const daysFromPrevMonth = firstDayOfWeek - 1;
+  const daysFromPrevMonth = firstDayOfWeek - 1;
 
-    const startDate = new Date(year, month, 1 - daysFromPrevMonth);
+  const startDate = new Date(year, month, 1 - daysFromPrevMonth);
 
-    const days = [];
-    for (let i = 0; i < 42; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      days.push({
-        date,
-        isCurrentMonth: date.getMonth() === month
-      });
-    }
-
-    if (days[35].date.getMonth() !== month && days[34].date.getMonth() !== month) {
-      return days.slice(0, 35);
-    }
-
-    return days;
-  });
-
-  const formatMonth = (date) => {
-    return new Intl.DateTimeFormat('fr-FR', {month: 'long', year: 'numeric'}).format(date);
-  };
-
-  const prevMonth = () => {
-    const newDate = new Date(internalCurrentMonth.value);
-    newDate.setMonth(newDate.getMonth() - 1);
-    internalCurrentMonth.value = newDate;
-    emit('update:current-month', newDate);
-  };
-
-  const nextMonth = () => {
-    const newDate = new Date(internalCurrentMonth.value);
-    newDate.setMonth(newDate.getMonth() + 1);
-    internalCurrentMonth.value = newDate;
-    emit('update:current-month', newDate);
-  };
-
-  const isToday = (date) => {
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-        date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear();
-  };
-
-  const isSelectedDate = (date) => {
-    return date.getDate() === props.selectedDate.getDate() &&
-        date.getMonth() === props.selectedDate.getMonth() &&
-        date.getFullYear() === props.selectedDate.getFullYear();
-  };
-
-  const selectDate = (day) => {
-    emit('update:selected-date', new Date(day.date));
-  };
-
-  const getDayMovements = (date) => {
-    return props.movements.filter(movement => {
-      const movementDate = new Date(movement.date);
-      return movementDate.getDate() === date.getDate() &&
-          movementDate.getMonth() === date.getMonth() &&
-          movementDate.getFullYear() === date.getFullYear();
+  const days = [];
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    days.push({
+      date,
+      isCurrentMonth: date.getMonth() === month
     });
-  };
+  }
 
-  const openImagePreview = (url) => {
-    if (url && url.length > 0 && !url.startsWith('blob:')) {
-      previewImageUrl.value = url;
-    }
-  };
+  if (days[35].date.getMonth() !== month && days[34].date.getMonth() !== month) {
+    return days.slice(0, 35);
+  }
+
+  return days;
+});
+
+const formatMonth = (date) => {
+  return new Intl.DateTimeFormat('fr-FR', {month: 'long', year: 'numeric'}).format(date);
+};
+
+const prevMonth = () => {
+  const newDate = new Date(internalCurrentMonth.value);
+  newDate.setMonth(newDate.getMonth() - 1);
+  internalCurrentMonth.value = newDate;
+  emit('update:current-month', newDate);
+};
+
+const nextMonth = () => {
+  const newDate = new Date(internalCurrentMonth.value);
+  newDate.setMonth(newDate.getMonth() + 1);
+  internalCurrentMonth.value = newDate;
+  emit('update:current-month', newDate);
+};
+
+const isToday = (date) => {
+  const today = new Date();
+  return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+};
+
+const isSelectedDate = (date) => {
+  return date.getDate() === props.selectedDate.getDate() &&
+      date.getMonth() === props.selectedDate.getMonth() &&
+      date.getFullYear() === props.selectedDate.getFullYear();
+};
+
+const selectDate = (day) => {
+  emit('update:selected-date', new Date(day.date));
+};
+
+const getDayMovements = (date) => {
+  return financeData.getDayMovements(date);
+};
+
+const openImagePreview = (url) => {
+  if (url && url.length > 0 && !url.startsWith('blob:')) {
+    previewImageUrl.value = url;
+  }
+};
 </script>

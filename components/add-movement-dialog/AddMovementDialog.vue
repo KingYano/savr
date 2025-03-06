@@ -184,93 +184,93 @@
 </template>
 
 <script setup lang="ts">
-import type { AddMovementDialogProps, NewMovement } from '@/types/finance';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CircleX } from 'lucide-vue-next'
+  import type { AddMovementDialogProps, NewMovement } from '@/types/finance';
+  import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+  } from '@/components/ui/dialog';
+  import { Button } from '@/components/ui/button';
+  import { Input } from '@/components/ui/input';
+  import { CircleX } from 'lucide-vue-next'
 
 
-const props = defineProps<AddMovementDialogProps>();
-const emit = defineEmits(['update:isOpen', 'addMovement']);
+  const props = defineProps<AddMovementDialogProps>();
+  const emit = defineEmits(['update:isOpen', 'addMovement']);
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const previewUrl = ref<string>('');
-const imageFileName = ref<string>('');
-const imageFile = ref<File | null>(null);
-const dateString = ref('');
+  const fileInput = ref<HTMLInputElement | null>(null);
+  const previewUrl = ref<string>('');
+  const imageFileName = ref<string>('');
+  const imageFile = ref<File | null>(null);
+  const dateString = ref('');
 
-const newMovement = ref<NewMovement>({
-  name: '',
-  amount: 0,
-  date: '',
-  type: 'expense',
-  isRecurrent: false,
-  imageUrl: '',
-});
-
-watch(dateString, (newValue) => {
-  newMovement.value.date = newValue;
-});
-
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    const file = input.files[0];
-    imageFile.value = file;
-    imageFileName.value = file.name;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target) {
-        previewUrl.value = e.target.result as string;
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const removeImage = () => {
-  previewUrl.value = '';
-  imageFileName.value = '';
-  imageFile.value = null;
-  newMovement.value.imageUrl = '';
-  if (fileInput.value) {
-    fileInput.value.value = '';
-  }
-};
-
-const handleAddMovement = () => {
-  if (!newMovement.value.name || !newMovement.value.amount || !newMovement.value.date) {
-    return;
-  }
-
-  if (previewUrl.value && previewUrl.value.length > 0) {
-    newMovement.value.imageUrl = previewUrl.value;
-
-    if (newMovement.value.imageUrl.startsWith('blob:')) {
-      console.error('URL Blob détectée, conversion en base64 nécessaire');
-    }
-  }
-
-  emit('addMovement', { ...newMovement.value });
-
-  newMovement.value = {
+  const newMovement = ref<NewMovement>({
     name: '',
     amount: 0,
     date: '',
     type: 'expense',
     isRecurrent: false,
     imageUrl: '',
-  };
-  dateString.value = '';
+  });
 
-  removeImage();
-};
+  watch(dateString, (newValue) => {
+    newMovement.value.date = newValue;
+  });
+
+  const handleImageUpload = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      imageFile.value = file;
+      imageFileName.value = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target) {
+          previewUrl.value = e.target.result as string;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    previewUrl.value = '';
+    imageFileName.value = '';
+    imageFile.value = null;
+    newMovement.value.imageUrl = '';
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
+  };
+
+  const handleAddMovement = () => {
+    if (!newMovement.value.name || !newMovement.value.amount || !newMovement.value.date) {
+      return;
+    }
+
+    if (previewUrl.value && previewUrl.value.length > 0) {
+      newMovement.value.imageUrl = previewUrl.value;
+
+      if (newMovement.value.imageUrl.startsWith('blob:')) {
+        console.error('URL Blob détectée, conversion en base64 nécessaire');
+      }
+    }
+
+    emit('addMovement', { ...newMovement.value });
+
+    newMovement.value = {
+      name: '',
+      amount: 0,
+      date: '',
+      type: 'expense',
+      isRecurrent: false,
+      imageUrl: '',
+    };
+    dateString.value = '';
+
+    removeImage();
+  };
 </script>

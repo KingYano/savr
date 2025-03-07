@@ -45,7 +45,7 @@ export function useFinance() {
             imageUrl: newMovement.imageUrl && newMovement.imageUrl.startsWith('blob:') ? '' : newMovement.imageUrl
         };
 
-        movements.value.push(movement);
+        movements.value = [...movements.value, movement];
 
         if (isClient) {
             localStorage.setItem('financeMovements', JSON.stringify(movements.value));

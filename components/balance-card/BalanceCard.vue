@@ -16,7 +16,6 @@
           </div>
         </div>
 
-        <!-- Version desktop: 3 colonnes -->
         <div class="hidden md:grid grid-cols-3 gap-4 pt-2 border-t" :class="isDarkMode ? 'border-gray-800' : 'border-slate-200'">
           <div class="space-y-1">
             <div class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-slate-600'">
@@ -46,7 +45,6 @@
           </div>
         </div>
 
-        <!-- Version mobile: empilée -->
         <div class="md:hidden flex flex-col space-y-3 pt-2 border-t" :class="isDarkMode ? 'border-gray-800' : 'border-slate-200'">
           <div class="flex justify-between items-center">
             <div class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-slate-600'">
@@ -81,63 +79,41 @@
 </template>
 
 <script setup lang="ts">
-import type { BalanceProps } from '~/types/finance';
-import { formatCurrency, formatMonthYear } from '~/utils/formatters';
-import { Card, CardContent } from '@/components/ui/card';
+  import type { BalanceProps } from '~/types/finance';
+  import { formatCurrency, formatMonthYear } from '~/utils/formatters';
+  import { Card, CardContent } from '@/components/ui/card';
+  import { useFinance } from '~/composables/useFinance';
 
-const props = defineProps<BalanceProps>();
+  const props = defineProps<BalanceProps>();
+  const financeData = useFinance();
 
-const getMonthBalance = computed(() => {
-  if (!props.movements || !Array.isArray(props.movements)) return 0;
+  const getMonthBalance = computed(() => {
+    if (!props.selectedMonth || isNaN(props.selectedMonth.getTime())) return 0;
 
-  const year = props.selectedMonth.getFullYear();
-  const month = props.selectedMonth.getMonth();
-
-  return props.movements
-      .filter(movement => {
-        const movementDate = new Date(movement.date);
-        return movementDate.getFullYear() === year &&
-            movementDate.getMonth() === month;
-      })
-      .reduce((acc, movement) => {
-        const amount = movement.type === 'expense'
-            ? -Math.abs(movement.amount)
-            : Math.abs(movement.amount);
-        return acc + amount;
-      }, 0);
-});
-
-const monthSummary = computed(() => {
-  if (!props.movements || !Array.isArray(props.movements)) {
-    return { income: 0, expense: 0, recurrent: 0 };
-  }
-
-  const year = props.selectedMonth.getFullYear();
-  const month = props.selectedMonth.getMonth();
-
-  const filteredMovements = props.movements.filter(movement => {
-    const movementDate = new Date(movement.date);
-    return movementDate.getFullYear() === year &&
-        movementDate.getMonth() === month;
+    return financeData.getMonthBalance(props.selectedMonth);
   });
 
-  const income = filteredMovements
-      .filter(m => m.type === 'income')
-      .reduce((total, m) => total + Math.abs(m.amount), 0);
+  const monthSummary = computed(() => {
+    if (!props.selectedMonth || isNaN(props.selectedMonth.getTime())) {
+      return { income: 0, expense: 0, recurrent: 0 };
+    }
 
-  const expense = filteredMovements
-      .filter(m => m.type === 'expense')
-      .reduce((total, m) => total + Math.abs(m.amount), 0);
+    const monthMovements = financeData.getMonthMovements(props.selectedMonth);
 
-  const recurrent = filteredMovements
-      .filter(m => m.isRecurrent)
-      .reduce((total, m) => {
-        const amount = m.type === 'expense'
-            ? Math.abs(m.amount)
-            : Math.abs(m.amount);
-        return total + amount;
-      }, 0);
+    const income = monthMovements
+        .filter(m => m.type === 'income')
+        .reduce((total, m) => total + Math.abs(m.amount), 0);
 
-  return { income, expense, recurrent };
-});
+    const expense = monthMovements
+        .filter(m => m.type === 'expense')
+        .reduce((total, m) => total + Math.abs(m.amount), 0);
+
+    const recurrent = monthMovements
+        .filter(m => m.isRecurrent || m.isGeneratedRecurrence)
+        .reduce((total, m) => {
+          return total + Math.abs(m.amount);
+        }, 0);
+
+    return { income, expense, recurrent };
+  });
 </script>

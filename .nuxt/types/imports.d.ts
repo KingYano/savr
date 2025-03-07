@@ -29,11 +29,8 @@ declare global {
   const formatFullDate: typeof import('../../utils/formatters')['formatFullDate']
   const formatMonthYear: typeof import('../../utils/formatters')['formatMonthYear']
   const getAppManifest: typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getAppManifest']
-  const getCalendarDays: typeof import('../../utils/dateHelpers')['getCalendarDays']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
-  const getNextMonth: typeof import('../../utils/dateHelpers')['getNextMonth']
-  const getPreviousMonth: typeof import('../../utils/dateHelpers')['getPreviousMonth']
   const getRouteRules: typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getRouteRules']
   const h: typeof import('vue')['h']
   const hasInjectionContext: typeof import('vue')['hasInjectionContext']
@@ -215,11 +212,8 @@ declare module 'vue' {
     readonly formatFullDate: UnwrapRef<typeof import('../../utils/formatters')['formatFullDate']>
     readonly formatMonthYear: UnwrapRef<typeof import('../../utils/formatters')['formatMonthYear']>
     readonly getAppManifest: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getAppManifest']>
-    readonly getCalendarDays: UnwrapRef<typeof import('../../utils/dateHelpers')['getCalendarDays']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
-    readonly getNextMonth: UnwrapRef<typeof import('../../utils/dateHelpers')['getNextMonth']>
-    readonly getPreviousMonth: UnwrapRef<typeof import('../../utils/dateHelpers')['getPreviousMonth']>
     readonly getRouteRules: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getRouteRules']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hasInjectionContext: UnwrapRef<typeof import('vue')['hasInjectionContext']>

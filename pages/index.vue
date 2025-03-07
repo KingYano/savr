@@ -31,6 +31,7 @@
 
       <ClientOnly>
         <BalanceCard
+            :key="`balance-${rerenderKey}`"
             :movements="financeData.movements.value || []"
             :selected-month="currentMonth"
             :is-dark-mode="isDarkMode"
@@ -39,6 +40,7 @@
 
       <ClientOnly>
         <FinanceCalendar
+            :key="`calendar-${rerenderKey}`"
             :movements="financeData.movements.value || []"
             :selected-date="selectedDate"
             :current-month="currentMonth"
@@ -50,6 +52,7 @@
 
       <ClientOnly>
         <MovementsList
+            :key="`movements-${rerenderKey}`"
             :movements="financeData.movements.value || []"
             :selected-date="selectedDate"
             :is-dark-mode="isDarkMode"
@@ -74,25 +77,28 @@
 </template>
 
 <script setup lang="ts">
-  import { Sun, Moon, Plus } from 'lucide-vue-next';
-  import type { NewMovement } from '~/types/finance';
-  import { formatFullDate } from '~/utils/formatters';
-  import { useFinance } from '~/composables/useFinance';
+import { Sun, Moon, Plus } from 'lucide-vue-next';
+import type { NewMovement } from '~/types/finance';
+import { formatFullDate } from '~/utils/formatters';
+import { useFinance } from '~/composables/useFinance';
 
-  const isDarkMode = ref(true);
-  const showAddDialog = ref(false);
-  const defaultDate = new Date();
-  const currentMonth = ref(defaultDate);
-  const selectedDate = ref(defaultDate);
+const isDarkMode = ref(true);
+const showAddDialog = ref(false);
+const defaultDate = new Date();
+const currentMonth = ref(defaultDate);
+const selectedDate = ref(defaultDate);
+const rerenderKey = ref(0);
 
-  const financeData = useFinance();
+const financeData = useFinance();
 
-  const toggleDarkMode = () => {
-    isDarkMode.value = !isDarkMode.value;
-  };
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value;
+};
 
-  const handleAddMovement = (newMovement: NewMovement) => {
-    financeData.addMovement(newMovement);
-    showAddDialog.value = false;
-  };
+const handleAddMovement = (newMovement: NewMovement) => {
+  financeData.addMovement(newMovement);
+  showAddDialog.value = false;
+
+  rerenderKey.value++;
+};
 </script>

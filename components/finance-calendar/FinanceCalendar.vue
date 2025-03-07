@@ -76,7 +76,7 @@
 
           <div class="flex-1 mt-1">
             <div class="hidden md:flex flex-wrap gap-1">
-              <template v-for="(movement) in getDayMovements(day.date).slice(0, 4)" :key="`desktop-${movement.id}`">
+              <template v-for="(movement) in getDayMovementsForDay(day.date).slice(0, 4)" :key="`desktop-${movement.id}`">
                 <div style="position: relative; width: 28px; height: 28px;"
                      class="rounded-full"
                      :style="movement.type === 'income'
@@ -104,15 +104,15 @@
                 </div>
               </template>
 
-              <div v-if="getDayMovements(day.date).length > 4"
+              <div v-if="getDayMovementsForDay(day.date).length > 4"
                    class="rounded-full"
                    style="width: 28px; height: 28px; background-color: rgb(37, 99, 235); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem;">
-                +{{ getDayMovements(day.date).length - 4 }}
+                +{{ getDayMovementsForDay(day.date).length - 4 }}
               </div>
             </div>
 
             <div class="flex md:hidden flex-wrap gap-1">
-              <template v-for="(movement) in getDayMovements(day.date).slice(0, 2)" :key="`mobile-${movement.id}`">
+              <template v-for="(movement) in getDayMovementsForDay(day.date).slice(0, 2)" :key="`mobile-${movement.id}`">
                 <div style="position: relative; width: 24px; height: 24px;"
                      class="rounded-full"
                      :style="movement.type === 'income'
@@ -140,10 +140,10 @@
                 </div>
               </template>
 
-              <div v-if="getDayMovements(day.date).length > 2"
+              <div v-if="getDayMovementsForDay(day.date).length > 2"
                    class="rounded-full"
                    style="width: 24px; height: 24px; background-color: rgb(37, 99, 235); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.625rem;">
-                +{{ getDayMovements(day.date).length - 2 }}
+                +{{ getDayMovementsForDay(day.date).length - 2 }}
               </div>
             </div>
           </div>
@@ -168,101 +168,107 @@
 </template>
 
 <script setup>
-import {ChevronLeft, ChevronRight, Repeat, ArrowUpCircle, ArrowDownCircle} from 'lucide-vue-next';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useFinance } from '~/composables/useFinance';
+  import {ChevronLeft, ChevronRight, Repeat, ArrowUpCircle, ArrowDownCircle} from 'lucide-vue-next';
+  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+  import { Button } from '@/components/ui/button';
+  import { useFinance } from '~/composables/useFinance';
 
-const props = defineProps({
-  movements: Array,
-  selectedDate: Date,
-  currentMonth: Date,
-  isDarkMode: Boolean
-});
+  const props = defineProps({
+    movements: Array,
+    selectedDate: Date,
+    currentMonth: Date,
+    isDarkMode: Boolean
+  });
 
-const emit = defineEmits(['update:selected-date', 'update:current-month']);
+  const emit = defineEmits(['update:selected-date', 'update:current-month']);
 
-const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-const internalCurrentMonth = ref(new Date(props.currentMonth));
-const previewImageUrl = ref('');
-const financeData = useFinance();
+  const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const internalCurrentMonth = ref(new Date(props.currentMonth));
+  const previewImageUrl = ref('');
+  const financeData = useFinance();
+  const updateTrigger = ref(0);
 
-watch(() => props.currentMonth, (newValue) => {
-  internalCurrentMonth.value = new Date(newValue);
-});
+  watch(() => financeData.movements.value, () => {
+    updateTrigger.value++;
+  }, { deep: true });
 
-const calendarDays = computed(() => {
-  const year = internalCurrentMonth.value.getFullYear();
-  const month = internalCurrentMonth.value.getMonth();
+  watch(() => props.currentMonth, (newValue) => {
+    internalCurrentMonth.value = new Date(newValue);
+  });
 
-  const firstDayOfMonth = new Date(year, month, 1);
+  const calendarDays = computed(() => {
+    const year = internalCurrentMonth.value.getFullYear();
+    const month = internalCurrentMonth.value.getMonth();
 
-  let firstDayOfWeek = firstDayOfMonth.getDay();
-  if (firstDayOfWeek === 0) firstDayOfWeek = 7;
+    const firstDayOfMonth = new Date(year, month, 1);
 
-  const daysFromPrevMonth = firstDayOfWeek - 1;
+    let firstDayOfWeek = firstDayOfMonth.getDay();
+    if (firstDayOfWeek === 0) firstDayOfWeek = 7;
 
-  const startDate = new Date(year, month, 1 - daysFromPrevMonth);
+    const daysFromPrevMonth = firstDayOfWeek - 1;
 
-  const days = [];
-  for (let i = 0; i < 42; i++) {
-    const date = new Date(startDate);
-    date.setDate(startDate.getDate() + i);
-    days.push({
-      date,
-      isCurrentMonth: date.getMonth() === month
-    });
-  }
+    const startDate = new Date(year, month, 1 - daysFromPrevMonth);
 
-  if (days[35].date.getMonth() !== month && days[34].date.getMonth() !== month) {
-    return days.slice(0, 35);
-  }
+    const days = [];
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      days.push({
+        date,
+        isCurrentMonth: date.getMonth() === month
+      });
+    }
 
-  return days;
-});
+    if (days[35].date.getMonth() !== month && days[34].date.getMonth() !== month) {
+      return days.slice(0, 35);
+    }
 
-const formatMonth = (date) => {
-  return new Intl.DateTimeFormat('fr-FR', {month: 'long', year: 'numeric'}).format(date);
-};
+    return days;
+  });
 
-const prevMonth = () => {
-  const newDate = new Date(internalCurrentMonth.value);
-  newDate.setMonth(newDate.getMonth() - 1);
-  internalCurrentMonth.value = newDate;
-  emit('update:current-month', newDate);
-};
+  const getDayMovementsForDay = (date) => {
+    updateTrigger.value;
+    return financeData.getDayMovements(date);
+  };
 
-const nextMonth = () => {
-  const newDate = new Date(internalCurrentMonth.value);
-  newDate.setMonth(newDate.getMonth() + 1);
-  internalCurrentMonth.value = newDate;
-  emit('update:current-month', newDate);
-};
+  const formatMonth = (date) => {
+    return new Intl.DateTimeFormat('fr-FR', {month: 'long', year: 'numeric'}).format(date);
+  };
 
-const isToday = (date) => {
-  const today = new Date();
-  return date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
-};
+  const prevMonth = () => {
+    const newDate = new Date(internalCurrentMonth.value);
+    newDate.setMonth(newDate.getMonth() - 1);
+    internalCurrentMonth.value = newDate;
+    emit('update:current-month', newDate);
+  };
 
-const isSelectedDate = (date) => {
-  return date.getDate() === props.selectedDate.getDate() &&
-      date.getMonth() === props.selectedDate.getMonth() &&
-      date.getFullYear() === props.selectedDate.getFullYear();
-};
+  const nextMonth = () => {
+    const newDate = new Date(internalCurrentMonth.value);
+    newDate.setMonth(newDate.getMonth() + 1);
+    internalCurrentMonth.value = newDate;
+    emit('update:current-month', newDate);
+  };
 
-const selectDate = (day) => {
-  emit('update:selected-date', new Date(day.date));
-};
+  const isToday = (date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear();
+  };
 
-const getDayMovements = (date) => {
-  return financeData.getDayMovements(date);
-};
+  const isSelectedDate = (date) => {
+    return date.getDate() === props.selectedDate.getDate() &&
+        date.getMonth() === props.selectedDate.getMonth() &&
+        date.getFullYear() === props.selectedDate.getFullYear();
+  };
 
-const openImagePreview = (url) => {
-  if (url && url.length > 0 && !url.startsWith('blob:')) {
-    previewImageUrl.value = url;
-  }
-};
+  const selectDate = (day) => {
+    emit('update:selected-date', new Date(day.date));
+  };
+
+  const openImagePreview = (url) => {
+    if (url && url.length > 0 && !url.startsWith('blob:')) {
+      previewImageUrl.value = url;
+    }
+  };
 </script>

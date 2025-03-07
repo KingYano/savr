@@ -105,8 +105,15 @@
 
   const previewImageUrl = ref<string>('');
   const financeData = useFinance();
+  const updateTrigger = ref(0);
+
+  watch(() => financeData.movements.value, () => {
+    updateTrigger.value++;
+  }, { deep: true });
 
   const filteredMovements = computed(() => {
+    updateTrigger.value;
+
     if (!props.selectedDate || !(props.selectedDate instanceof Date) || isNaN(props.selectedDate.getTime())) {
       console.error('Date invalide:', props.selectedDate);
       return [];

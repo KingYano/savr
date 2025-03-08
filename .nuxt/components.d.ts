@@ -4,6 +4,7 @@ type IslandComponent<T extends DefineComponent> = T & DefineComponent<{}, {refre
 interface _GlobalComponents {
       'AddMovementDialog': typeof import("../components/add-movement-dialog/AddMovementDialog.vue")['default']
     'BalanceCard': typeof import("../components/balance-card/BalanceCard.vue")['default']
+    'EditMovementDialog': typeof import("../components/edit-movement-dialog/EditMovementDialog.vue")['default']
     'FinanceCalendar': typeof import("../components/finance-calendar/FinanceCalendar.vue")['default']
     'MovementsList': typeof import("../components/movements-list/MovementsList.vue")['default']
     'NotificationAction': typeof import("../components/notification-action/NotificationAction.vue")['default']
@@ -73,6 +74,7 @@ interface _GlobalComponents {
     'NuxtRouteAnnouncer': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
       'LazyAddMovementDialog': typeof import("../components/add-movement-dialog/AddMovementDialog.vue")['default']
     'LazyBalanceCard': typeof import("../components/balance-card/BalanceCard.vue")['default']
+    'LazyEditMovementDialog': typeof import("../components/edit-movement-dialog/EditMovementDialog.vue")['default']
     'LazyFinanceCalendar': typeof import("../components/finance-calendar/FinanceCalendar.vue")['default']
     'LazyMovementsList': typeof import("../components/movements-list/MovementsList.vue")['default']
     'LazyNotificationAction': typeof import("../components/notification-action/NotificationAction.vue")['default']
@@ -148,6 +150,7 @@ declare module 'vue' {
 
 export const AddMovementDialog: typeof import("../components/add-movement-dialog/AddMovementDialog.vue")['default']
 export const BalanceCard: typeof import("../components/balance-card/BalanceCard.vue")['default']
+export const EditMovementDialog: typeof import("../components/edit-movement-dialog/EditMovementDialog.vue")['default']
 export const FinanceCalendar: typeof import("../components/finance-calendar/FinanceCalendar.vue")['default']
 export const MovementsList: typeof import("../components/movements-list/MovementsList.vue")['default']
 export const NotificationAction: typeof import("../components/notification-action/NotificationAction.vue")['default']
@@ -217,6 +220,7 @@ export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components
 export const NuxtRouteAnnouncer: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const LazyAddMovementDialog: typeof import("../components/add-movement-dialog/AddMovementDialog.vue")['default']
 export const LazyBalanceCard: typeof import("../components/balance-card/BalanceCard.vue")['default']
+export const LazyEditMovementDialog: typeof import("../components/edit-movement-dialog/EditMovementDialog.vue")['default']
 export const LazyFinanceCalendar: typeof import("../components/finance-calendar/FinanceCalendar.vue")['default']
 export const LazyMovementsList: typeof import("../components/movements-list/MovementsList.vue")['default']
 export const LazyNotificationAction: typeof import("../components/notification-action/NotificationAction.vue")['default']

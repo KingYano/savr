@@ -56,16 +56,18 @@
             :movements="financeData.movements.value || []"
             :selected-date="selectedDate"
             :is-dark-mode="isDarkMode"
+            @movement-updated="handleMovementUpdated"
         />
       </ClientOnly>
     </div>
 
     <button
         @click="showAddDialog = true"
-        class="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center"
+        class="fixed bottom-20 right-6 rounded-full w-12 h-12 shadow-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center"
     >
       <Plus class="h-6 w-6" />
     </button>
+
 
     <AddMovementDialog
         :is-open="showAddDialog"
@@ -99,6 +101,11 @@ const handleAddMovement = (newMovement: NewMovement) => {
   financeData.addMovement(newMovement);
   showAddDialog.value = false;
 
+  // Incrémenter la clé pour forcer un re-rendu des composants
+  rerenderKey.value++;
+};
+
+const handleMovementUpdated = () => {
   rerenderKey.value++;
 };
 </script>

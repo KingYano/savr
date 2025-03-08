@@ -45,7 +45,7 @@
             'flex items-center gap-1'
           ]">
             {{ movement.name }}
-            <span v-if="movement.isGeneratedRecurrence"
+            <span v-if="movement.isRecurrent || movement.isGeneratedRecurrence"
                   class="text-xs px-1.5 py-0.5 rounded-full"
                   :class="isDarkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-200 text-gray-600'">
               Récurrent
@@ -63,6 +63,17 @@
           ]"
         >
           {{ formatCurrency(movement.amount) }}
+        </div>
+
+        <!-- Actions - seulement pour les mouvements non récurrents générés -->
+        <div v-if="!movement.isGeneratedRecurrence" class="flex items-center">
+          <button
+              @click="editMovement(movement)"
+              class="p-2 rounded-full"
+              :class="isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'"
+          >
+            <Edit3 class="h-4 w-4" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'" />
+          </button>
         </div>
       </div>
 
@@ -86,71 +97,115 @@
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <!-- Dialog d'édition de mouvement -->
+    <EditMovementDialog
+        :is-open="showEditDialog"
+        :is-dark-mode="isDarkMode"
+        :movement="selectedMovement"
+        @update:is-open="showEditDialog = $event"
+        @save-movement="handleSaveMovement"
+        @delete-movement="handleDeleteMovement"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ArrowUpCircle, ArrowDownCircle, Repeat } from 'lucide-vue-next';
-  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-  import { Button } from '@/components/ui/button';
-  import type { Movement } from '~/types/finance';
-  import { formatCurrency, formatDate } from '~/utils/formatters';
-  import { useFinance } from '~/composables/useFinance';
+import { ArrowUpCircle, ArrowDownCircle, Repeat, Edit3 } from 'lucide-vue-next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import type { Movement } from '~/types/finance';
+import { formatCurrency, formatDate } from '~/utils/formatters';
+import { useFinance } from '~/composables/useFinance';
+import EditMovementDialog from '~/components/edit-movement-dialog/EditMovementDialog.vue';
 
-  const props = defineProps<{
-    movements: Movement[];
-    selectedDate: Date;
-    isDarkMode: boolean;
-  }>();
+const props = defineProps<{
+  movements: Movement[];
+  selectedDate: Date;
+  isDarkMode: boolean;
+}>();
 
-  const previewImageUrl = ref<string>('');
-  const financeData = useFinance();
-  const updateTrigger = ref(0);
+const emit = defineEmits(['movement-updated']);
+const previewImageUrl = ref<string>('');
+const financeData = useFinance();
+const updateTrigger = ref(0);
+const showEditDialog = ref(false);
+const selectedMovement = ref<Movement | null>(null);
 
-  watch(() => financeData.movements.value, () => {
+// Surveiller les changements dans les mouvements pour forcer la réactivité
+watch(() => financeData.movements.value, () => {
+  updateTrigger.value++;
+}, { deep: true });
+
+const filteredMovements = computed(() => {
+  // Utiliser updateTrigger pour forcer le recalcul
+  updateTrigger.value;
+
+  if (!props.selectedDate || !(props.selectedDate instanceof Date) || isNaN(props.selectedDate.getTime())) {
+    console.error('Date invalide:', props.selectedDate);
+    return [];
+  }
+
+  try {
+    const dayMovements = financeData.getDayMovements(props.selectedDate);
+
+    return dayMovements.sort((a, b) => {
+      const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+      const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+
+      if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+        return 0;
+      }
+
+      const dateComparison = dateB.getTime() - dateA.getTime();
+
+      if (dateComparison !== 0) return dateComparison;
+
+      if (a.type !== b.type) {
+        return a.type === 'income' ? -1 : 1;
+      }
+
+      return b.amount - a.amount;
+    });
+  } catch (error) {
+    console.error('Erreur lors du filtrage des mouvements:', error);
+    return [];
+  }
+});
+
+const openImagePreview = (url: string) => {
+  if (url && url.length > 0 && !url.startsWith('blob:')) {
+    previewImageUrl.value = url;
+  } else {
+    console.error('URL d\'image invalide:', url);
+  }
+};
+
+const editMovement = (movement: Movement) => {
+  // Vérifier s'il s'agit d'un mouvement récurrent généré (pas le mouvement original)
+  if (movement.isGeneratedRecurrence) {
+    // Ne pas permettre l'édition des occurrences générées
+    return;
+  }
+
+  selectedMovement.value = movement;
+  showEditDialog.value = true;
+};
+
+const handleSaveMovement = (updatedMovement: Movement) => {
+  if (financeData.updateMovement(updatedMovement)) {
+    showEditDialog.value = false;
+    selectedMovement.value = null;
     updateTrigger.value++;
-  }, { deep: true });
+    emit('movement-updated');
+  }
+};
 
-  const filteredMovements = computed(() => {
-    updateTrigger.value;
-
-    if (!props.selectedDate || !(props.selectedDate instanceof Date) || isNaN(props.selectedDate.getTime())) {
-      console.error('Date invalide:', props.selectedDate);
-      return [];
-    }
-
-    try {
-      const dayMovements = financeData.getDayMovements(props.selectedDate);
-
-      return dayMovements.sort((a, b) => {
-        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
-        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
-
-        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-          return 0;
-        }
-
-        const dateComparison = dateB.getTime() - dateA.getTime();
-
-        if (dateComparison !== 0) return dateComparison;
-
-        if (a.type !== b.type) {
-          return a.type === 'income' ? -1 : 1;
-        }
-
-        return b.amount - a.amount;
-      });
-    } catch (error) {
-      console.error('Erreur lors du filtrage des mouvements:', error);
-      return [];
-    }
-  });
-
-  const openImagePreview = (url: string) => {
-    if (url && url.length > 0 && !url.startsWith('blob:')) {
-      previewImageUrl.value = url;
-    } else {
-      console.error('URL d\'image invalide:', url);
-    }
-  };
+const handleDeleteMovement = (id: number) => {
+  financeData.deleteMovement(id);
+  showEditDialog.value = false;
+  selectedMovement.value = null;
+  updateTrigger.value++;
+  emit('movement-updated');
+};
 </script>

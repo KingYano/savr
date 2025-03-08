@@ -54,18 +54,13 @@ export function useFinance() {
     };
 
     const updateMovement = (updatedMovement: Movement) => {
-        // Trouver l'index du mouvement à mettre à jour
         const index = movements.value.findIndex(m => m.id === updatedMovement.id);
 
         if (index !== -1) {
-            // S'assurer que la date est un objet Date
-            const date = updatedMovement.date instanceof Date
-                ? updatedMovement.date
-                : new Date(updatedMovement.date);
+            const date = updatedMovement.date;
 
             const safeDate = isNaN(date.getTime()) ? new Date() : date;
 
-            // Créer un mouvement mis à jour avec la date correcte
             const movement: Movement = {
                 ...updatedMovement,
                 date: safeDate,
@@ -75,7 +70,6 @@ export function useFinance() {
                     : updatedMovement.imageUrl
             };
 
-            // Créer un nouveau tableau avec le mouvement mis à jour
             const updatedMovements = [...movements.value];
             updatedMovements[index] = movement;
             movements.value = updatedMovements;
@@ -91,7 +85,6 @@ export function useFinance() {
     };
 
     const deleteMovement = (id: number) => {
-        // Filtrer le mouvement à supprimer
         movements.value = movements.value.filter(m => m.id !== id);
 
         if (isClient) {
@@ -110,9 +103,7 @@ export function useFinance() {
 
             movements.value.forEach(movement => {
                 if (movement.isRecurrent) {
-                    const originalDate = movement.date instanceof Date
-                        ? new Date(movement.date)
-                        : new Date(movement.date);
+                    const originalDate = new Date(movement.date);
 
                     if (isNaN(originalDate.getTime())) {
                         console.error('Date invalide pour le mouvement récurrent:', movement);

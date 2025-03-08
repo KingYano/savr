@@ -79,33 +79,32 @@
 </template>
 
 <script setup lang="ts">
-import { Sun, Moon, Plus } from 'lucide-vue-next';
-import type { NewMovement } from '~/types/finance';
-import { formatFullDate } from '~/utils/formatters';
-import { useFinance } from '~/composables/useFinance';
+  import { Sun, Moon, Plus } from 'lucide-vue-next';
+  import type { NewMovement } from '~/types/finance';
+  import { formatFullDate } from '~/utils/formatters';
+  import { useFinance } from '~/composables/useFinance';
 
-const isDarkMode = ref(true);
-const showAddDialog = ref(false);
-const defaultDate = new Date();
-const currentMonth = ref(defaultDate);
-const selectedDate = ref(defaultDate);
-const rerenderKey = ref(0);
+  const isDarkMode = ref(true);
+  const showAddDialog = ref(false);
+  const defaultDate = new Date();
+  const currentMonth = ref(defaultDate);
+  const selectedDate = ref(defaultDate);
+  const rerenderKey = ref(0);
 
-const financeData = useFinance();
+  const financeData = useFinance();
 
-const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value;
-};
+  const toggleDarkMode = () => {
+    isDarkMode.value = !isDarkMode.value;
+  };
 
-const handleAddMovement = (newMovement: NewMovement) => {
-  financeData.addMovement(newMovement);
-  showAddDialog.value = false;
+  const handleAddMovement = (newMovement: NewMovement) => {
+    financeData.addMovement(newMovement);
+    showAddDialog.value = false;
 
-  // Incrémenter la clé pour forcer un re-rendu des composants
-  rerenderKey.value++;
-};
+    rerenderKey.value++;
+  };
 
-const handleMovementUpdated = () => {
-  rerenderKey.value++;
-};
+  const handleMovementUpdated = () => {
+    rerenderKey.value++;
+  };
 </script>

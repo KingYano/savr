@@ -201,123 +201,117 @@
 </template>
 
 <script setup lang="ts">
-import type { Movement } from '@/types/finance';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CircleX } from 'lucide-vue-next'
+  import type { Movement } from '@/types/finance';
+  import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+  } from '@/components/ui/dialog';
+  import { Button } from '@/components/ui/button';
+  import { Input } from '@/components/ui/input';
+  import { CircleX } from 'lucide-vue-next'
 
-interface EditMovementDialogProps {
-  isOpen: boolean;
-  isDarkMode: boolean;
-  movement: Movement | null;
-}
+  interface EditMovementDialogProps {
+    isOpen: boolean;
+    isDarkMode: boolean;
+    movement: Movement | null;
+  }
 
-const props = defineProps<EditMovementDialogProps>();
-const emit = defineEmits(['update:isOpen', 'saveMovement', 'deleteMovement']);
+  const props = defineProps<EditMovementDialogProps>();
+  const emit = defineEmits(['update:isOpen', 'saveMovement', 'deleteMovement']);
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const previewUrl = ref<string>('');
-const imageFileName = ref<string>('');
-const imageFile = ref<File | null>(null);
-const dateString = ref('');
-const editedMovement = ref<Movement>({
-  id: 0,
-  name: '',
-  amount: 0,
-  date: new Date(),
-  type: 'expense',
-  isRecurrent: false,
-  imageUrl: '',
-});
+  const fileInput = ref<HTMLInputElement | null>(null);
+  const previewUrl = ref<string>('');
+  const imageFileName = ref<string>('');
+  const imageFile = ref<File | null>(null);
+  const dateString = ref('');
+  const editedMovement = ref<Movement>({
+    id: 0,
+    name: '',
+    amount: 0,
+    date: new Date(),
+    type: 'expense',
+    isRecurrent: false,
+    imageUrl: '',
+  });
 
-// Initialiser le formulaire avec les données du mouvement à éditer
-watch(() => props.movement, (newMovement) => {
-  if (newMovement) {
-    // Copie pour éviter la modification directe
-    editedMovement.value = { ...newMovement };
+  watch(() => props.movement, (newMovement) => {
+    if (newMovement) {
+      editedMovement.value = { ...newMovement };
 
-    // Convertir la date au format YYYY-MM-DD pour l'input date
-    const date = new Date(newMovement.date);
-    if (!isNaN(date.getTime())) {
-      dateString.value = date.toISOString().split('T')[0];
+      const date = new Date(newMovement.date);
+      if (!isNaN(date.getTime())) {
+        dateString.value = date.toISOString().split('T')[0];
+      }
+
+      previewUrl.value = '';
+      imageFileName.value = '';
+      imageFile.value = null;
     }
+  }, { immediate: true });
 
-    // Supprimer l'image de prévisualisation si on change de mouvement
+  watch(dateString, (newValue) => {
+    if (newValue) {
+      editedMovement.value.date = new Date(newValue);
+    }
+  });
+
+  const handleImageUpload = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      imageFile.value = file;
+      imageFileName.value = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target) {
+          previewUrl.value = e.target.result as string;
+          editedMovement.value.imageUrl = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
     previewUrl.value = '';
     imageFileName.value = '';
     imageFile.value = null;
-  }
-}, { immediate: true });
-
-watch(dateString, (newValue) => {
-  if (newValue) {
-    editedMovement.value.date = new Date(newValue);
-  }
-});
-
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    const file = input.files[0];
-    imageFile.value = file;
-    imageFileName.value = file.name;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target) {
-        previewUrl.value = e.target.result as string;
-        // Quand on télécharge une nouvelle image, on remplace l'ancienne
-        editedMovement.value.imageUrl = '';
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const removeImage = () => {
-  previewUrl.value = '';
-  imageFileName.value = '';
-  imageFile.value = null;
-  if (fileInput.value) {
-    fileInput.value.value = '';
-  }
-};
-
-const removeCurrentImage = () => {
-  editedMovement.value.imageUrl = '';
-};
-
-const handleSaveMovement = () => {
-  if (!editedMovement.value.name || !editedMovement.value.amount || !editedMovement.value.date) {
-    return;
-  }
-
-  const updatedMovement = { ...editedMovement.value };
-
-  if (previewUrl.value && previewUrl.value.length > 0) {
-    updatedMovement.imageUrl = previewUrl.value;
-
-    if (updatedMovement.imageUrl.startsWith('blob:')) {
-      console.error('URL Blob détectée, conversion en base64 nécessaire');
+    if (fileInput.value) {
+      fileInput.value.value = '';
     }
-  }
+  };
 
-  emit('saveMovement', updatedMovement);
+  const removeCurrentImage = () => {
+    editedMovement.value.imageUrl = '';
+  };
 
-  // Réinitialiser
-  removeImage();
-};
+  const handleSaveMovement = () => {
+    if (!editedMovement.value.name || !editedMovement.value.amount || !editedMovement.value.date) {
+      return;
+    }
 
-const handleDeleteMovement = () => {
-  if (props.movement) {
-    emit('deleteMovement', props.movement.id);
-  }
-};
+    const updatedMovement = { ...editedMovement.value };
+
+    if (previewUrl.value && previewUrl.value.length > 0) {
+      updatedMovement.imageUrl = previewUrl.value;
+
+      if (updatedMovement.imageUrl.startsWith('blob:')) {
+        console.error('URL Blob détectée, conversion en base64 nécessaire');
+      }
+    }
+
+    emit('saveMovement', updatedMovement);
+
+    removeImage();
+  };
+
+  const handleDeleteMovement = () => {
+    if (props.movement) {
+      emit('deleteMovement', props.movement.id);
+    }
+  };
 </script>

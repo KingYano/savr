@@ -31,7 +31,6 @@
 
       <ClientOnly>
         <BalanceCard
-            :key="`balance-${rerenderKey}`"
             :movements="financeData.movements.value || []"
             :selected-month="currentMonth"
             :is-dark-mode="isDarkMode"
@@ -40,19 +39,17 @@
 
       <ClientOnly>
         <FinanceCalendar
-            :key="`calendar-${rerenderKey}`"
             :movements="financeData.movements.value || []"
             :selected-date="selectedDate"
             :current-month="currentMonth"
             :is-dark-mode="isDarkMode"
-            @update:selected-date="selectedDate = $event"
-            @update:current-month="currentMonth = $event"
+            @update:selected-date="uiStore.setSelectedDate($event)"
+            @update:current-month="uiStore.setCurrentMonth($event)"
         />
       </ClientOnly>
 
       <ClientOnly>
         <MovementsList
-            :key="`movements-${rerenderKey}`"
             :movements="financeData.movements.value || []"
             :selected-date="selectedDate"
             :is-dark-mode="isDarkMode"
@@ -62,7 +59,7 @@
     </div>
 
     <button
-        @click="showAddDialog = true"
+        @click="uiStore.openAddDialog()"
         class="fixed bottom-20 right-6 rounded-full w-12 h-12 shadow-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center"
     >
       <Plus class="h-6 w-6" />
@@ -72,7 +69,7 @@
     <AddMovementDialog
         :is-open="showAddDialog"
         :is-dark-mode="isDarkMode"
-        @update:is-open="showAddDialog = $event"
+        @update:is-open="uiStore.closeAddDialog"
         @add-movement="handleAddMovement"
     />
   </div>
@@ -83,28 +80,46 @@
   import type { NewMovement } from '~/types/finance';
   import { formatFullDate } from '~/utils/formatters';
   import { useFinance } from '~/composables/useFinance';
+  import { useSettingsStore } from '~/stores/settings';
+  import { useUIStore } from '~/stores/ui';
+  import { storeToRefs } from 'pinia';
 
-  const isDarkMode = ref(true);
-  const showAddDialog = ref(false);
-  const defaultDate = new Date();
-  const currentMonth = ref(defaultDate);
-  const selectedDate = ref(defaultDate);
-  const rerenderKey = ref(0);
-
+  // Stores
   const financeData = useFinance();
+  const settingsStore = useSettingsStore();
+  const uiStore = useUIStore();
+  
+  // État réactif depuis les stores
+  const { isDarkMode } = storeToRefs(settingsStore);
+  const { showAddDialog, selectedDate, currentMonth } = storeToRefs(uiStore);
+  
+  // Initialiser les dates si nécessaire
+  const defaultDate = new Date();
+  if (!selectedDate.value || isNaN(selectedDate.value.getTime())) {
+    uiStore.setSelectedDate(defaultDate);
+  }
+  if (!currentMonth.value || isNaN(currentMonth.value.getTime())) {
+    uiStore.setCurrentMonth(defaultDate);
+  }
+  
+  // Charger les paramètres au démarrage
+  onMounted(() => {
+    settingsStore.loadSettings();
+  });
 
   const toggleDarkMode = () => {
-    isDarkMode.value = !isDarkMode.value;
+    settingsStore.toggleDarkMode();
   };
 
-  const handleAddMovement = (newMovement: NewMovement) => {
-    financeData.addMovement(newMovement);
-    showAddDialog.value = false;
-
-    rerenderKey.value++;
+  const handleAddMovement = async (newMovement: NewMovement) => {
+    const success = await financeData.addMovement(newMovement);
+    if (success) {
+      uiStore.closeAddDialog();
+    }
   };
 
   const handleMovementUpdated = () => {
-    rerenderKey.value++;
+    // Plus besoin de forcer le re-render avec Pinia
+    // La réactivité est automatique
   };
 </script>

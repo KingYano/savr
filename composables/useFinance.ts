@@ -1,268 +1,186 @@
-import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useMovementsStore } from '~/stores/movements';
+import { useFinanceStore } from '~/stores/finance';
+import { useUIStore } from '~/stores/ui';
+import { MovementsService, MigrationService } from '~/utils/database';
 import type { Movement, NewMovement } from '~/types/finance';
 
+/**
+ * Composable principal pour la gestion financière
+ * Fait le pont entre les stores Pinia et les composants
+ */
 export function useFinance() {
-    const isClient = process.client;
+  const movementsStore = useMovementsStore();
+  const financeStore = useFinanceStore();
+  const uiStore = useUIStore();
 
-    const storedMovements = isClient
-        ? localStorage.getItem('financeMovements')
-        : null;
+  // Refs réactives depuis les stores
+  const { movements, isLoading, error } = storeToRefs(movementsStore);
 
-    const movements = ref<Movement[]>(
-        isClient && storedMovements ? JSON.parse(storedMovements) : []
-    );
-
-    if (isClient && movements.value.length > 0) {
-        movements.value = movements.value.map(m => {
-            const imageUrl = m.imageUrl && m.imageUrl.startsWith('blob:')
-                ? ''
-                : m.imageUrl;
-
-            const date = m.date instanceof Date ? m.date : new Date(m.date);
-
-            return {
-                ...m,
-                date: isNaN(date.getTime()) ? new Date() : date,
-                imageUrl
-            };
-        });
+  // Initialisation manuelle des données (pour les cas spéciaux)
+  const initializeData = async () => {
+    try {
+      uiStore.setLoading(true, 'Rechargement des données...');
+      const loadedMovements = await MovementsService.loadMovements();
+      movementsStore.loadMovements(loadedMovements);
+    } catch (error) {
+      console.error('Erreur initialisation:', error);
+      uiStore.showError(
+        'Erreur de chargement',
+        'Impossible de charger vos données.'
+      );
+    } finally {
+      uiStore.setLoading(false);
     }
+  };
 
-    const addMovement = (newMovement: NewMovement) => {
-        const date = typeof newMovement.date === 'string'
-            ? new Date(newMovement.date)
-            : newMovement.date;
+  // Sauvegarder automatiquement après chaque modification
+  const autoSave = async () => {
+    try {
+      await MovementsService.saveMovements(movements.value);
+    } catch (error) {
+      console.error('Erreur sauvegarde automatique:', error);
+      uiStore.showError(
+        'Erreur de sauvegarde',
+        'Vos modifications n\'ont pas pu être sauvegardées automatiquement.'
+      );
+    }
+  };
 
-        const safeDate = isNaN(date.getTime()) ? new Date() : date;
+  // Ajouter un mouvement
+  const addMovement = async (newMovement: NewMovement): Promise<boolean> => {
+    try {
+      uiStore.clearNotifications();
+      const movement = movementsStore.addMovement(newMovement);
+      await autoSave();
+      
+      uiStore.showSuccess('Mouvement ajouté', `${movement.name} a été ajouté avec succès`);
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      uiStore.showError('Erreur d\'ajout', message);
+      return false;
+    }
+  };
 
-        const movement: Movement = {
-            id: Date.now(),
-            name: newMovement.name,
-            amount: Number(newMovement.amount),
-            date: safeDate,
-            type: newMovement.type,
-            isRecurrent: newMovement.isRecurrent,
-            imageUrl: newMovement.imageUrl && newMovement.imageUrl.startsWith('blob:') ? '' : newMovement.imageUrl
-        };
+  // Mettre à jour un mouvement
+  const updateMovement = async (updatedMovement: Movement): Promise<boolean> => {
+    try {
+      uiStore.clearNotifications();
+      const success = movementsStore.updateMovement(updatedMovement);
+      
+      if (success) {
+        await autoSave();
+        uiStore.showSuccess('Mouvement modifié', 'Les modifications ont été sauvegardées');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      uiStore.showError('Erreur de modification', message);
+      return false;
+    }
+  };
 
-        // Créer un nouveau tableau au lieu d'utiliser push
-        movements.value = [...movements.value, movement];
+  // Supprimer un mouvement
+  const deleteMovement = async (id: number): Promise<boolean> => {
+    try {
+      uiStore.clearNotifications();
+      const success = movementsStore.deleteMovement(id);
+      
+      if (success) {
+        await autoSave();
+        uiStore.showSuccess('Mouvement supprimé', 'Le mouvement a été supprimé avec succès');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      uiStore.showError('Erreur de suppression', message);
+      return false;
+    }
+  };
 
-        if (isClient) {
-            localStorage.setItem('financeMovements', JSON.stringify(movements.value));
-        }
-    };
-
-    const updateMovement = (updatedMovement: Movement) => {
-        const index = movements.value.findIndex(m => m.id === updatedMovement.id);
-
-        if (index !== -1) {
-            const date = updatedMovement.date;
-
-            const safeDate = isNaN(date.getTime()) ? new Date() : date;
-
-            const movement: Movement = {
-                ...updatedMovement,
-                date: safeDate,
-                amount: Number(updatedMovement.amount),
-                imageUrl: updatedMovement.imageUrl && updatedMovement.imageUrl.startsWith('blob:')
-                    ? ''
-                    : updatedMovement.imageUrl
-            };
-
-            const updatedMovements = [...movements.value];
-            updatedMovements[index] = movement;
-            movements.value = updatedMovements;
-
-            if (isClient) {
-                localStorage.setItem('financeMovements', JSON.stringify(movements.value));
-            }
-
-            return true;
-        }
-
-        return false;
-    };
-
-    const deleteMovement = (id: number) => {
-        movements.value = movements.value.filter(m => m.id !== id);
-
-        if (isClient) {
-            localStorage.setItem('financeMovements', JSON.stringify(movements.value));
-        }
-    };
-
-    const getAllMovementsWithRecurrences = (startDate: Date, endDate: Date) => {
-        if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            console.error('Dates invalides:', { startDate, endDate });
-            return [...movements.value];
-        }
-
-        try {
-            const result: Movement[] = [...movements.value];
-
-            movements.value.forEach(movement => {
-                if (movement.isRecurrent) {
-                    const originalDate = new Date(movement.date);
-
-                    if (isNaN(originalDate.getTime())) {
-                        console.error('Date invalide pour le mouvement récurrent:', movement);
-                        return;
-                    }
-
-                    let currentDate = new Date(originalDate);
-
-                    currentDate.setMonth(currentDate.getMonth() + 1);
-
-                    while (currentDate <= endDate) {
-                        if (currentDate >= startDate) {
-                            const clonedMovement: Movement = {
-                                ...movement,
-                                id: movement.id + currentDate.getTime(),
-                                date: new Date(currentDate),
-                                isGeneratedRecurrence: true
-                            };
-                            result.push(clonedMovement);
-                        }
-
-                        currentDate = new Date(currentDate);
-                        currentDate.setMonth(currentDate.getMonth() + 1);
-                    }
-                }
-            });
-
-            return result;
-        } catch (error) {
-            console.error('Erreur lors de la génération des récurrences:', error);
-            return [...movements.value];
-        }
-    };
-
-    const getMonthMovements = (date: Date) => {
-        if (!date || isNaN(date.getTime())) {
-            console.error('Date invalide:', date);
-            return [];
-        }
-
-        try {
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            const startDate = new Date(year, month, 1);
-            const endDate = new Date(year, month + 1, 0);
-
-            const allMovements = getAllMovementsWithRecurrences(startDate, endDate);
-
-            return allMovements.filter(movement => {
-                const movementDate = movement.date instanceof Date
-                    ? movement.date
-                    : new Date(movement.date);
-
-                if (isNaN(movementDate.getTime())) {
-                    return false;
-                }
-
-                return movementDate.getMonth() === date.getMonth() &&
-                    movementDate.getFullYear() === date.getFullYear();
-            });
-        } catch (error) {
-            console.error('Erreur lors de la récupération des mouvements du mois:', error);
-            return [];
-        }
-    };
-
-    const getDayMovements = (date: Date) => {
-        if (!date || isNaN(date.getTime())) {
-            console.error('Date invalide:', date);
-            return [];
-        }
-
-        try {
-            const sixMonthsLater = new Date(date);
-            sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
-
-            const allMovements = getAllMovementsWithRecurrences(date, sixMonthsLater);
-
-            return allMovements.filter(movement => {
-                const movementDate = movement.date instanceof Date
-                    ? movement.date
-                    : new Date(movement.date);
-
-                if (isNaN(movementDate.getTime())) {
-                    return false;
-                }
-
-                return movementDate.getDate() === date.getDate() &&
-                    movementDate.getMonth() === date.getMonth() &&
-                    movementDate.getFullYear() === date.getFullYear();
-            });
-        } catch (error) {
-            console.error('Erreur lors de la récupération des mouvements du jour:', error);
-            return [];
-        }
-    };
-
-    const getTotalBalance = () => {
-        return movements.value.reduce((total, movement) => {
-            const amount = movement.type === 'expense'
-                ? -Math.abs(movement.amount)
-                : Math.abs(movement.amount);
-            return total + amount;
-        }, 0);
-    };
-
-    const getMonthBalance = (date: Date) => {
-        if (!date || isNaN(date.getTime())) {
-            console.error('Date invalide pour getMonthBalance:', date);
-            return 0;
-        }
-
-        try {
-            const monthMovements = getMonthMovements(date);
-            return monthMovements.reduce((total, movement) => {
-                const amount = movement.type === 'expense'
-                    ? -Math.abs(movement.amount)
-                    : Math.abs(movement.amount);
-                return total + amount;
-            }, 0);
-        } catch (error) {
-            console.error('Erreur lors du calcul du solde mensuel:', error);
-            return 0;
-        }
-    };
-
-    const getIncomeExpenseForMonth = (date: Date) => {
-        if (!date || isNaN(date.getTime())) {
-            console.error('Date invalide pour getIncomeExpenseForMonth:', date);
-            return { income: 0, expense: 0 };
-        }
-
-        try {
-            const monthMovements = getMonthMovements(date);
-
-            const income = monthMovements
-                .filter(m => m.type === 'income')
-                .reduce((total, m) => total + Number(m.amount), 0);
-
-            const expense = monthMovements
-                .filter(m => m.type === 'expense')
-                .reduce((total, m) => total + Number(m.amount), 0);
-
-            return { income, expense };
-        } catch (error) {
-            console.error('Erreur lors du calcul des revenus et dépenses:', error);
-            return { income: 0, expense: 0 };
-        }
-    };
-
+  // Fonctions de calcul (délégation au store finance)
+  const getMonthMovements = (date: Date) => financeStore.getMonthMovements(date);
+  const getDayMovements = (date: Date) => financeStore.getDayMovements(date);
+  const getMonthBalance = (date: Date) => financeStore.getMonthCalculations(date).monthlyBalance;
+  const getIncomeExpenseForMonth = (date: Date) => {
+    const calc = financeStore.getMonthCalculations(date);
     return {
-        movements,
-        addMovement,
-        updateMovement,
-        deleteMovement,
-        getMonthMovements,
-        getDayMovements,
-        getTotalBalance,
-        getMonthBalance,
-        getIncomeExpenseForMonth
+      income: calc.monthlyIncome,
+      expense: calc.monthlyExpenses
     };
+  };
+
+  // Fonctions utilitaires
+  const getTotalBalance = () => financeStore.getTotalBalance;
+
+  const exportData = async () => {
+    try {
+      uiStore.setLoading(true, 'Export en cours...');
+      const data = await MigrationService.exportData();
+      
+      // Créer un fichier de téléchargement
+      const blob = new Blob([JSON.stringify(data, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `savr-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      uiStore.showSuccess('Export réussi', 'Vos données ont été exportées avec succès');
+    } catch (error) {
+      uiStore.showError('Erreur d\'export', 'Impossible d\'exporter vos données');
+    } finally {
+      uiStore.setLoading(false);
+    }
+  };
+
+  const importData = async (file: File) => {
+    try {
+      uiStore.setLoading(true, 'Import en cours...');
+      
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      await MigrationService.importData(data);
+      await initializeData(); // Recharger les données
+      
+      uiStore.showSuccess('Import réussi', 'Vos données ont été importées avec succès');
+    } catch (error) {
+      uiStore.showError('Erreur d\'import', 'Format de fichier invalide ou données corrompues');
+    } finally {
+      uiStore.setLoading(false);
+    }
+  };
+
+  // L'initialisation est maintenant gérée par le plugin pinia.client.ts
+
+  return {
+    // État
+    movements: readonly(movements),
+    isLoading: readonly(isLoading),
+    error: readonly(error),
+
+    // Actions
+    addMovement,
+    updateMovement,
+    deleteMovement,
+
+    // Calculs
+    getMonthMovements,
+    getDayMovements,
+    getMonthBalance,
+    getIncomeExpenseForMonth,
+    getTotalBalance,
+
+    // Utilitaires
+    initializeData,
+    exportData,
+    importData
+  };
 }

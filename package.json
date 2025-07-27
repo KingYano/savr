@@ -10,18 +10,24 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@pinia/nuxt": "^0.11.2",
     "@tanstack/vue-table": "^8.21.2",
+    "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^12.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dexie": "^4.0.11",
     "lucide-vue-next": "^0.476.0",
     "nuxt": "^3.15.4",
+    "pinia": "^3.0.3",
     "reka-ui": "^2.0.2",
     "shadcn-nuxt": "^1.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "vee-validate": "^4.15.1",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "zod": "^4.0.10"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.13.1",

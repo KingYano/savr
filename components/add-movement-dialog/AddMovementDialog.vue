@@ -115,12 +115,12 @@
                 <span>Choisir une image</span>
               </button>
               <span class="text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">
-                {{ imageFileName || 'Aucun fichier sélectionné' }}
+                {{ imageUpload.state.value.fileName || 'Aucun fichier sélectionné' }}
               </span>
             </div>
 
-            <div v-if="previewUrl" class="mt-2 relative">
-              <img :src="previewUrl" alt="Prévisualisation" class="h-24 w-auto object-cover rounded-md" />
+            <div v-if="imageUpload.state.value.previewUrl" class="mt-2 relative">
+              <img :src="imageUpload.state.value.previewUrl" alt="Prévisualisation" class="h-24 w-auto object-cover rounded-md" />
               <button
                   type="button"
                   @click="removeImage"
@@ -128,6 +128,29 @@
               >
                 <span class="items-center justify-center"><CircleX/></span>
               </button>
+            </div>
+            
+            <!-- Affichage des erreurs et informations de compression -->
+            <div v-if="imageUpload.state.value.error" class="mt-2">
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {{ imageUpload.state.value.error }}
+                </AlertDescription>
+              </Alert>
+            </div>
+            
+            <div v-if="imageUpload.state.value.compressionInfo" class="mt-1">
+              <div class="text-xs flex items-center gap-1" :class="isDarkMode ? 'text-green-400' : 'text-green-600'">
+                <Check class="h-3 w-3" />
+                {{ imageUpload.state.value.compressionInfo }}
+              </div>
+            </div>
+            
+            <div v-if="imageUpload.state.value.isUploading" class="mt-2">
+              <div class="flex items-center gap-2 text-sm" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">
+                <Upload class="h-4 w-4 animate-pulse" />
+                Traitement en cours...
+              </div>
             </div>
           </div>
         </div>
@@ -175,8 +198,9 @@
         <Button
             class="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
             @click="handleAddMovement"
+            :disabled="imageUpload.state.value.isUploading"
         >
-          Ajouter
+          {{ imageUpload.state.value.isUploading ? 'Traitement...' : 'Ajouter' }}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -194,17 +218,23 @@
   } from '@/components/ui/dialog';
   import { Button } from '@/components/ui/button';
   import { Input } from '@/components/ui/input';
-  import { CircleX } from 'lucide-vue-next'
+  import { Alert, AlertDescription } from '@/components/ui/alert';
+  import { CircleX, Upload, Check } from 'lucide-vue-next';
+  import { useImageUpload } from '~/composables/useImageUpload';
 
 
   const props = defineProps<AddMovementDialogProps>();
   const emit = defineEmits(['update:isOpen', 'addMovement']);
 
   const fileInput = ref<HTMLInputElement | null>(null);
-  const previewUrl = ref<string>('');
-  const imageFileName = ref<string>('');
-  const imageFile = ref<File | null>(null);
   const dateString = ref('');
+  
+  // Utilisation du composable pour l'upload d'images
+  const imageUpload = useImageUpload({
+    maxSizeBytes: 2 * 1024 * 1024, // 2MB
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    compressionEnabled: true
+  });
 
   const newMovement = ref<NewMovement>({
     name: '',
@@ -219,58 +249,48 @@
     newMovement.value.date = newValue;
   });
 
-  const handleImageUpload = (event: Event) => {
+  const handleImageUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      imageFile.value = file;
-      imageFileName.value = file.name;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target) {
-          previewUrl.value = e.target.result as string;
-        }
-      };
-      reader.readAsDataURL(file);
+      await imageUpload.handleFileUpload(file);
     }
   };
 
   const removeImage = () => {
-    previewUrl.value = '';
-    imageFileName.value = '';
-    imageFile.value = null;
+    imageUpload.resetState();
     newMovement.value.imageUrl = '';
     if (fileInput.value) {
       fileInput.value.value = '';
     }
   };
 
-  const handleAddMovement = () => {
+  const handleAddMovement = async () => {
     if (!newMovement.value.name || !newMovement.value.amount || !newMovement.value.date) {
       return;
     }
 
-    if (previewUrl.value && previewUrl.value.length > 0) {
-      newMovement.value.imageUrl = previewUrl.value;
-
-      if (newMovement.value.imageUrl.startsWith('blob:')) {
-        console.error('URL Blob détectée, conversion en base64 nécessaire');
+    try {
+      // Obtenir l'URL de données si une image est présente
+      if (imageUpload.state.value.file) {
+        newMovement.value.imageUrl = await imageUpload.getDataUrl();
       }
+
+      emit('addMovement', { ...newMovement.value });
+
+      // Reset du formulaire
+      newMovement.value = {
+        name: '',
+        amount: 0,
+        date: '',
+        type: 'expense',
+        isRecurrent: false,
+        imageUrl: '',
+      };
+      dateString.value = '';
+      removeImage();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du mouvement:', error);
     }
-
-    emit('addMovement', { ...newMovement.value });
-
-    newMovement.value = {
-      name: '',
-      amount: 0,
-      date: '',
-      type: 'expense',
-      isRecurrent: false,
-      imageUrl: '',
-    };
-    dateString.value = '';
-
-    removeImage();
   };
 </script>

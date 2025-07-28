@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, readonly, onUnmounted } from 'vue';
 import { validateImageFile, type ImageValidationResult } from '~/utils/imageValidator';
 import { compressImage, type CompressionResult, formatFileSize } from '~/utils/imageCompressor';
 
@@ -117,7 +117,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(new Error('Erreur lecture fichier'));
-      reader.readAsDataURL(state.value.file);
+      reader.readAsDataURL(state.value.file!);
     });
   };
 

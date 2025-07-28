@@ -61,7 +61,7 @@
                 type="text"
                 placeholder="Ex: Loyer, Salaire..."
                 :class="[
-                isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
+                isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
               ]"
             />
           </div>
@@ -75,10 +75,10 @@
                   placeholder="0.00"
                   class="pl-8"
                   :class="[
-                  isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
+                  isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
                 ]"
               />
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+              <span :class="['absolute left-3 top-1/2 -translate-y-1/2', isDarkMode ? 'text-gray-400' : 'text-gray-500']">€</span>
             </div>
           </div>
 
@@ -88,7 +88,38 @@
                 v-model="dateString"
                 type="date"
                 :class="[
-                isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
+                isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
+              ]"
+            />
+          </div>
+
+          <!-- Catégorie -->
+          <div class="space-y-1 sm:space-y-2">
+            <CategorySelect
+              v-model="newMovement.categoryId"
+              label="Catégorie"
+              :filter-type="newMovement.type"
+            />
+          </div>
+
+          <!-- Tags -->
+          <div class="space-y-1 sm:space-y-2">
+            <TagSelect
+              v-model="newMovement.tags"
+              label="Tags (optionnel)"
+              :max-tags="3"
+            />
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-1 sm:space-y-2">
+            <label :class="isDarkMode ? 'text-white' : 'text-slate-900'">Description (optionnel)</label>
+            <Input
+                v-model="newMovement.description"
+                type="text"
+                placeholder="Description du mouvement..."
+                :class="[
+                isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
               ]"
             />
           </div>
@@ -109,7 +140,7 @@
                   @click="$refs.fileInput.click()"
                   :class="[
                   'px-3 py-2 rounded-md flex items-center gap-1 text-sm sm:text-base',
-                  isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  isDarkMode ? 'bg-[#242424] hover:bg-[#3D3D3D] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 ]"
               >
                 <span>Choisir une image</span>
@@ -221,6 +252,8 @@
   import { Alert, AlertDescription } from '@/components/ui/alert';
   import { CircleX, Upload, Check } from 'lucide-vue-next';
   import { useImageUpload } from '~/composables/useImageUpload';
+  import CategorySelect from '~/components/categories/CategorySelect.vue';
+  import TagSelect from '~/components/categories/TagSelect.vue';
 
 
   const props = defineProps<AddMovementDialogProps>();
@@ -243,6 +276,9 @@
     type: 'expense',
     isRecurrent: false,
     imageUrl: '',
+    categoryId: undefined,
+    tags: [],
+    description: ''
   });
 
   watch(dateString, (newValue) => {
@@ -286,6 +322,9 @@
         type: 'expense',
         isRecurrent: false,
         imageUrl: '',
+        categoryId: undefined,
+        tags: [],
+        description: ''
       };
       dateString.value = '';
       removeImage();

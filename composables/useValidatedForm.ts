@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue';
-import { type ZodSchema, type ZodError } from 'zod';
+import { ref, computed, readonly } from 'vue';
+import { type ZodSchema, ZodError } from 'zod';
 
 export interface ValidationError {
   field: string;
@@ -13,19 +13,17 @@ export interface UseValidatedFormOptions<T> {
   validateOnChange?: boolean;
 }
 
-export function useValidatedForm<T extends Record<string, any>>(
+export function useValidatedForm<T extends Record<string, unknown>>(
   options: UseValidatedFormOptions<T>
 ) {
   const { schema, initialValues = {}, onSubmit, validateOnChange = true } = options;
 
-  // État du formulaire
   const formData = ref({ ...initialValues } as T);
   const errors = ref<ValidationError[]>([]);
   const isSubmitting = ref(false);
   const isDirty = ref(false);
   const touchedFields = ref(new Set<string>());
 
-  // Validation complète
   const validate = (): boolean => {
     try {
       schema.parse(formData.value);
@@ -33,9 +31,9 @@ export function useValidatedForm<T extends Record<string, any>>(
       return true;
     } catch (error) {
       if (error instanceof ZodError) {
-        errors.value = error.errors.map(e => ({
-          field: e.path.join('.'),
-          message: e.message
+        errors.value = error.issues.map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message
         }));
       } else {
         errors.value = [{ field: 'root', message: 'Erreur de validation' }];
@@ -44,31 +42,32 @@ export function useValidatedForm<T extends Record<string, any>>(
     }
   };
 
-  // Validation d'un champ spécifique
+  const hasShape = (schema: ZodSchema<T>): schema is ZodSchema<T> & { shape: Record<string, ZodSchema<unknown>> } => {
+    return 'shape' in schema && typeof (schema as { shape?: unknown }).shape === 'object';
+  };
+
   const validateField = (fieldName: string): boolean => {
     try {
-      const fieldSchema = schema.shape?.[fieldName];
+      if (!hasShape(schema)) return true;
+      
+      const fieldSchema = schema.shape[fieldName];
       if (!fieldSchema) return true;
 
       fieldSchema.parse(formData.value[fieldName]);
-      
-      // Supprimer les erreurs de ce champ
       errors.value = errors.value.filter(e => e.field !== fieldName);
       return true;
     } catch (error) {
       if (error instanceof ZodError) {
-        // Remplacer ou ajouter l'erreur pour ce champ
         errors.value = errors.value.filter(e => e.field !== fieldName);
         errors.value.push({
           field: fieldName,
-          message: error.errors[0]?.message || 'Erreur de validation'
+          message: error.issues[0]?.message || 'Erreur de validation'
         });
       }
       return false;
     }
   };
 
-  // Getters pour les erreurs
   const getFieldError = (fieldName: string) => {
     return errors.value.find(e => e.field === fieldName)?.message;
   };
@@ -79,7 +78,6 @@ export function useValidatedForm<T extends Record<string, any>>(
 
   const hasErrors = computed(() => errors.value.length > 0);
 
-  // Gestion des champs touchés
   const markFieldTouched = (fieldName: string) => {
     touchedFields.value.add(fieldName);
   };
@@ -88,7 +86,6 @@ export function useValidatedForm<T extends Record<string, any>>(
     return touchedFields.value.has(fieldName);
   };
 
-  // Mettre à jour un champ
   const setFieldValue = <K extends keyof T>(fieldName: K, value: T[K]) => {
     formData.value[fieldName] = value;
     isDirty.value = true;
@@ -99,29 +96,26 @@ export function useValidatedForm<T extends Record<string, any>>(
     }
   };
 
-  // Gestionnaire d'événement pour les inputs
   const createFieldHandler = <K extends keyof T>(fieldName: K) => {
-    return (event: Event | any) => {
-      const target = event.target || event;
+    return (event: Event | T[K]) => {
+      const target = event as Event & { target?: { value?: T[K] } };
       let value: T[K];
 
-      if (target && 'value' in target) {
-        value = target.value;
+      if (target.target && 'value' in target.target) {
+        value = target.target.value as T[K];
       } else {
-        value = event;
+        value = event as T[K];
       }
 
       setFieldValue(fieldName, value);
     };
   };
 
-  // Gestionnaire de soumission
   const handleSubmit = async (event?: Event) => {
     if (event) {
       event.preventDefault();
     }
 
-    // Marquer tous les champs comme touchés
     Object.keys(formData.value).forEach(field => {
       markFieldTouched(field);
     });
@@ -134,7 +128,6 @@ export function useValidatedForm<T extends Record<string, any>>(
       await onSubmit(formData.value);
       return true;
     } catch (error) {
-      console.error('Erreur lors de la soumission:', error);
       errors.value.push({
         field: 'root',
         message: error instanceof Error ? error.message : 'Erreur de soumission'
@@ -145,7 +138,6 @@ export function useValidatedForm<T extends Record<string, any>>(
     }
   };
 
-  // Réinitialiser le formulaire
   const reset = (newValues?: Partial<T>) => {
     formData.value = { ...initialValues, ...newValues } as T;
     errors.value = [];
@@ -153,14 +145,12 @@ export function useValidatedForm<T extends Record<string, any>>(
     touchedFields.value.clear();
   };
 
-  // État calculé
   const isValid = computed(() => !hasErrors.value);
   const canSubmit = computed(() => 
     isValid.value && !isSubmitting.value && isDirty.value
   );
 
   return {
-    // État
     formData: readonly(formData),
     errors: readonly(errors),
     isSubmitting: readonly(isSubmitting),
@@ -168,21 +158,15 @@ export function useValidatedForm<T extends Record<string, any>>(
     isValid,
     hasErrors,
     canSubmit,
-
-    // Méthodes de validation
     validate,
     validateField,
     getFieldError,
     hasFieldError,
     isFieldTouched,
-
-    // Méthodes de manipulation
     setFieldValue,
     createFieldHandler,
     handleSubmit,
     reset,
-
-    // Utilitaires
     markFieldTouched
   };
 }

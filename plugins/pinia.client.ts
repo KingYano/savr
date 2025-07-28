@@ -1,7 +1,8 @@
 // Plugin côté client pour initialiser les stores une seule fois
 import { useSettingsStore } from '~/stores/settings';
 import { useUIStore } from '~/stores/ui';
-import { MigrationService, MovementsService } from '~/utils/database';
+import { useCategoriesStore } from '~/stores/categories';
+import { MigrationService, MovementsService, CategoriesService } from '~/utils/database';
 import { useMovementsStore } from '~/stores/movements';
 
 let initialized = false;
@@ -16,6 +17,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     const settingsStore = useSettingsStore();
     const uiStore = useUIStore();
     const movementsStore = useMovementsStore();
+    const categoriesStore = useCategoriesStore();
 
     try {
       // Charger les paramètres utilisateur
@@ -45,6 +47,18 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
       // Charger les données depuis IndexedDB
       try {
+        // Charger les catégories et tags
+        const [loadedCategories, loadedTags] = await Promise.all([
+          CategoriesService.loadCategories(),
+          CategoriesService.loadTags()
+        ]);
+        
+        categoriesStore.loadData({ 
+          categories: loadedCategories, 
+          tags: loadedTags 
+        });
+
+        // Charger les mouvements
         const loadedMovements = await MovementsService.loadMovements();
         movementsStore.loadMovements(loadedMovements);
       } catch (loadError) {

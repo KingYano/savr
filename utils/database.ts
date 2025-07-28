@@ -1,21 +1,45 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Movement } from '~/types/finance';
+import type { Category, Tag } from '~/types/categories';
 
 export interface StoredMovement extends Omit<Movement, 'date'> {
   date: string; // Stocké comme string pour IndexedDB
 }
 
+export type SettingValue = string | number | boolean | object | null;
+
 export interface AppSettings {
   id?: number;
   key: string;
-  value: any;
+  value: SettingValue;
   updatedAt: Date;
+}
+
+export interface StoredCategory {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description?: string;
+  isDefault: boolean;
+  parentId?: string;
+  order: number;
+  createdAt: string;
+}
+
+export interface StoredTag {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
 }
 
 // Base de données IndexedDB avec Dexie
 export class SavrDatabase extends Dexie {
   movements!: EntityTable<StoredMovement, 'id'>;
   settings!: EntityTable<AppSettings, 'id'>;
+  categories!: EntityTable<StoredCategory, 'id'>;
+  tags!: EntityTable<StoredTag, 'id'>;
 
   constructor() {
     super('SavrDB');
@@ -32,6 +56,20 @@ export class SavrDatabase extends Dexie {
       // Migration pour ajouter isGeneratedRecurrence
       return tx.table('movements').toCollection().modify(movement => {
         movement.isGeneratedRecurrence = false;
+      });
+    });
+
+    this.version(3).stores({
+      movements: 'id, name, amount, date, type, isRecurrent, imageUrl, isGeneratedRecurrence, categoryId',
+      settings: '++id, key, value, updatedAt',
+      categories: 'id, name, order, isDefault',
+      tags: 'id, name'
+    }).upgrade(tx => {
+      // Migration pour ajouter categoryId et tags aux mouvements
+      return tx.table('movements').toCollection().modify(movement => {
+        movement.categoryId = null;
+        movement.tags = [];
+        movement.description = null;
       });
     });
   }
@@ -138,7 +176,7 @@ export class MovementsService {
 // Service de gestion des paramètres
 export class SettingsService {
   // Sauvegarder un paramètre
-  static async saveSetting(key: string, value: any): Promise<void> {
+  static async saveSetting(key: string, value: SettingValue): Promise<void> {
     try {
       const existing = await db.settings.where('key').equals(key).first();
       
@@ -230,7 +268,7 @@ export class MigrationService {
         localStorage.removeItem('userSettings');
       }
 
-      console.log(`Migration terminée: ${migratedMovements} mouvements, ${migratedSettings} paramètres`);
+(`Migration terminée: ${migratedMovements} mouvements, ${migratedSettings} paramètres`);
       
       return { movements: migratedMovements, settings: migratedSettings };
     } catch (error) {
@@ -294,6 +332,75 @@ export class MigrationService {
     } catch (error) {
       console.error('Erreur import données:', error);
       throw new Error('Impossible d\'importer les données');
+    }
+  }
+}
+
+// Service de gestion des catégories
+export class CategoriesService {
+  // Sauvegarder toutes les catégories
+  static async saveCategories(categories: Category[]): Promise<void> {
+    try {
+      const storedCategories: StoredCategory[] = categories.map(cat => ({
+        ...cat,
+        createdAt: cat.createdAt.toISOString()
+      }));
+
+      await db.transaction('rw', db.categories, async () => {
+        await db.categories.clear();
+        await db.categories.bulkAdd(storedCategories);
+      });
+    } catch (error) {
+      console.error('Erreur sauvegarde catégories:', error);
+      throw new Error('Impossible de sauvegarder les catégories');
+    }
+  }
+
+  // Charger toutes les catégories
+  static async loadCategories(): Promise<Category[]> {
+    try {
+      const storedCategories = await db.categories.toArray();
+      
+      return storedCategories.map(cat => ({
+        ...cat,
+        createdAt: new Date(cat.createdAt)
+      }));
+    } catch (error) {
+      console.error('Erreur chargement catégories:', error);
+      return [];
+    }
+  }
+
+  // Sauvegarder tous les tags
+  static async saveTags(tags: Tag[]): Promise<void> {
+    try {
+      const storedTags: StoredTag[] = tags.map(tag => ({
+        ...tag,
+        createdAt: tag.createdAt.toISOString()
+      }));
+
+      await db.transaction('rw', db.tags, async () => {
+        await db.tags.clear();
+        await db.tags.bulkAdd(storedTags);
+      });
+    } catch (error) {
+      console.error('Erreur sauvegarde tags:', error);
+      throw new Error('Impossible de sauvegarder les tags');
+    }
+  }
+
+  // Charger tous les tags
+  static async loadTags(): Promise<Tag[]> {
+    try {
+      const storedTags = await db.tags.toArray();
+      
+      return storedTags.map(tag => ({
+        ...tag,
+        createdAt: new Date(tag.createdAt)
+      }));
+    } catch (error) {
+      console.error('Erreur chargement tags:', error);
+      return [];
     }
   }
 }

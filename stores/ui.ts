@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import type { Movement } from '~/types/finance';
 
 export interface NotificationOptions {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -21,7 +22,7 @@ export interface UIState {
   currentMonth: Date;
   showAddDialog: boolean;
   showEditDialog: boolean;
-  editingMovement: any | null;
+  editingMovement: Movement | null;
 }
 
 export const useUIStore = defineStore('ui', {
@@ -162,7 +163,7 @@ export const useUIStore = defineStore('ui', {
       this.showAddDialog = false;
     },
 
-    openEditDialog(movement: any) {
+    openEditDialog(movement: Movement) {
       this.showEditDialog = true;
       this.showAddDialog = false;
       this.editingMovement = movement;

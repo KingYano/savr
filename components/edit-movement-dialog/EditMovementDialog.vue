@@ -2,11 +2,11 @@
   <Dialog :open="isOpen" @update:open="$emit('update:isOpen', $event)">
     <DialogContent :class="[
       'p-0 w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto',
-      isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-slate-200'
+      isDarkMode ? 'bg-[#1A1A1A] border-white/10' : 'bg-white border-slate-200'
     ]">
       <DialogHeader :class="[
         'sticky top-0 z-10 p-4 sm:p-6 border-b',
-        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-slate-200 bg-white'
+        isDarkMode ? 'border-white/10 bg-[#1A1A1A]' : 'border-slate-200 bg-white'
       ]">
         <DialogTitle :class="[
           'text-xl sm:text-2xl font-semibold',
@@ -61,7 +61,7 @@
                 type="text"
                 placeholder="Ex: Loyer, Salaire..."
                 :class="[
-                isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
+                isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
               ]"
             />
           </div>
@@ -75,10 +75,10 @@
                   placeholder="0.00"
                   class="pl-8"
                   :class="[
-                  isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
+                  isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
                 ]"
               />
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+              <span :class="['absolute left-3 top-1/2 -translate-y-1/2', isDarkMode ? 'text-gray-400' : 'text-gray-500']">€</span>
             </div>
           </div>
 
@@ -88,7 +88,7 @@
                 v-model="dateString"
                 type="date"
                 :class="[
-                isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-slate-200'
+                isDarkMode ? 'bg-[#242424] border-white/10 text-white' : 'bg-white border-slate-200'
               ]"
             />
           </div>
@@ -109,7 +109,7 @@
                   @click="$refs.fileInput.click()"
                   :class="[
                   'px-3 py-2 rounded-md flex items-center gap-1 text-sm sm:text-base',
-                  isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  isDarkMode ? 'bg-[#242424] hover:bg-[#3D3D3D] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 ]"
               >
                 <span>Choisir une image</span>
@@ -181,7 +181,7 @@
 
       <DialogFooter :class="[
         'sticky bottom-0 z-10 p-4 sm:p-6 border-t flex space-x-2',
-        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-slate-200 bg-white'
+        isDarkMode ? 'border-white/10 bg-[#1A1A1A]' : 'border-slate-200 bg-white'
       ]">
         <Button
             class="w-1/2 bg-red-500 hover:bg-red-600 text-white"

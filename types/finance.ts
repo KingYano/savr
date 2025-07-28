@@ -7,6 +7,9 @@ export interface Movement {
     isRecurrent: boolean;
     imageUrl?: string;
     isGeneratedRecurrence?: boolean;
+    categoryId?: string;
+    tags?: string[];
+    description?: string;
 }
 
 export interface NewMovement {
@@ -16,6 +19,9 @@ export interface NewMovement {
     type: "expense" | "income";
     isRecurrent: boolean;
     imageUrl?: string;
+    categoryId?: string;
+    tags?: string[];
+    description?: string;
 }
 
 export interface BalanceProps {

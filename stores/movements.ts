@@ -134,6 +134,7 @@ export const useMovementsStore = defineStore('movements', {
 
     // Charger les mouvements (pour la persistance)
     loadMovements(movements: Movement[]) {
+('🏪 [MovementsStore] - Loading movements:', movements.length, movements);
       this.isLoading = true;
       this.error = null;
       
@@ -141,17 +142,22 @@ export const useMovementsStore = defineStore('movements', {
         // Validation et nettoyage des données
         this.movements = movements.map(m => ({
           ...m,
+          id: m.id || Date.now() + Math.random(), // S'assurer qu'il y a un ID
           date: m.date instanceof Date ? m.date : new Date(m.date),
           amount: Number(m.amount),
-          name: m.name.trim(),
+          name: m.name?.trim() || '',
           // Nettoyer les URLs blob
           imageUrl: m.imageUrl && m.imageUrl.startsWith('blob:') ? undefined : m.imageUrl
         })).filter(m => 
+          m.id !== undefined &&
+          m.id !== null &&
           m.name && 
           !isNaN(m.amount) && 
           m.amount > 0 && 
           !isNaN(m.date.getTime())
         );
+        
+  ('🏪 [MovementsStore] - Final loaded movements:', this.movements.length, this.movements);
       } catch (error) {
         this.error = 'Erreur lors du chargement des données';
         this.movements = [];

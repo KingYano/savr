@@ -1,8 +1,6 @@
 <template>
   <div>
     <NuxtPage />
-    
-    <!-- Composants globaux pour l'UX -->
     <ToastContainer />
     <LoadingOverlay />
   </div>

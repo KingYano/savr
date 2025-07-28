@@ -1,8 +1,8 @@
 <template>
   <div :class="[
    'rounded-xl overflow-hidden',
-   isDarkMode ? 'bg-gray-900' : 'bg-white',
-   isDarkMode ? 'border-gray-800' : 'border border-gray-200'
+   isDarkMode ? 'bg-[#1A1A1A]' : 'bg-white',
+   isDarkMode ? 'border-white/10' : 'border border-gray-200'
  ]">
     <div class="p-4 flex justify-between items-center">
       <h2 :class="[
@@ -17,10 +17,10 @@
             @click="prevMonth"
             :class="[
            'p-1 rounded-md',
-           isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+           isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-100'
          ]"
         >
-          <ChevronLeft class="h-5 w-5" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'" />
+          <ChevronLeft class="h-5 w-5" :class="isDarkMode ? 'text-white/60' : 'text-gray-600'" />
         </button>
 
         <span :class="isDarkMode ? 'text-white' : 'text-gray-900'">
@@ -31,10 +31,10 @@
             @click="nextMonth"
             :class="[
            'p-1 rounded-md',
-           isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+           isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-100'
          ]"
         >
-          <ChevronRight class="h-5 w-5" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'" />
+          <ChevronRight class="h-5 w-5" :class="isDarkMode ? 'text-white/60' : 'text-gray-600'" />
         </button>
       </div>
     </div>
@@ -44,7 +44,7 @@
           v-for="day in daysOfWeek"
           :key="day"
           class="p-2 text-center text-sm font-medium"
-          :class="isDarkMode ? 'bg-gray-900 text-gray-400' : 'bg-white text-gray-500'"
+          :class="isDarkMode ? 'bg-gray-900 text-white/60' : 'bg-white text-gray-500'"
       >
         {{ day }}
       </div>

@@ -99,7 +99,7 @@
           'px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap',
           'pointer-events-none',
           isDarkMode 
-            ? 'bg-gray-800 text-white border border-gray-700' 
+            ? 'bg-gray-800 text-white border border-white/10' 
             : 'bg-black text-white'
         ]"
       >

@@ -44,7 +44,7 @@
           v-for="day in daysOfWeek"
           :key="day"
           class="p-2 text-center text-sm font-medium"
-          :class="isDarkMode ? 'bg-gray-900 text-white/60' : 'bg-white text-gray-500'"
+          :class="isDarkMode ? 'bg-[#1A1A1A] text-white/60' : 'bg-white text-gray-500'"
       >
         {{ day }}
       </div>
@@ -57,7 +57,7 @@
          'p-2',
          'md:min-h-[100px]',
          'min-h-[80px]',
-         isDarkMode ? 'bg-gray-900' : 'bg-white',
+         isDarkMode ? 'bg-[#1A1A1A]' : 'bg-white',
          isDarkMode && !day.isCurrentMonth ? 'text-gray-700' : '',
          !isDarkMode && !day.isCurrentMonth ? 'text-gray-300' : '',
          isDarkMode && day.isCurrentMonth ? 'text-gray-300' : '',
@@ -152,7 +152,7 @@
     </div>
 
     <Dialog :open="!!previewImageUrl && previewImageUrl.length > 0" @update:open="previewImageUrl = ''">
-      <DialogContent :class="isDarkMode ? 'dark bg-gray-900' : 'bg-white'" class="max-w-2xl">
+      <DialogContent :class="isDarkMode ? 'dark bg-[#1A1A1A]' : 'bg-white'" class="max-w-2xl">
         <DialogHeader>
           <DialogTitle :class="isDarkMode ? 'text-white' : 'text-gray-900'">Aperçu de l'image</DialogTitle>
         </DialogHeader>

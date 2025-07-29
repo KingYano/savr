@@ -5,7 +5,7 @@
         <div
           v-if="uiStore.isLoading"
           class="fixed inset-0 z-50 flex items-center justify-center"
-          :class="isDarkMode ? 'bg-gray-900/80' : 'bg-white/80'"
+          :class="isDarkMode ? 'bg-[#080808]/80' : 'bg-white/80'"
           role="dialog"
           aria-labelledby="loading-title"
           aria-describedby="loading-description"

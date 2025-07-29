@@ -1,8 +1,8 @@
 <template>
   <div :class="[
     'rounded-xl overflow-hidden',
-    isDarkMode ? 'bg-gray-900' : 'bg-white',
-    isDarkMode ? 'border-gray-800' : 'border border-gray-200'
+    isDarkMode ? 'bg-[#1A1A1A]' : 'bg-white',
+    isDarkMode ? 'border-white/10' : 'border border-gray-200'
   ]">
     <div class="p-4">
       <h2 :class="[
@@ -84,7 +84,7 @@
     </div>
 
     <Dialog :open="!!previewImageUrl && previewImageUrl.length > 0" @update:open="previewImageUrl = ''">
-      <DialogContent :class="isDarkMode ? 'dark bg-gray-900' : 'bg-white'" class="max-w-2xl">
+      <DialogContent :class="isDarkMode ? 'dark bg-[#1A1A1A]' : 'bg-white'" class="max-w-2xl">
         <DialogHeader>
           <DialogTitle :class="isDarkMode ? 'text-white' : 'text-gray-900'">Aperçu de l'image</DialogTitle>
         </DialogHeader>

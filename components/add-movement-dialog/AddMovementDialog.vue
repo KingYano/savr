@@ -2,11 +2,11 @@
   <Dialog :open="isOpen" @update:open="$emit('update:isOpen', $event)">
     <DialogContent :class="[
       'p-0 w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto',
-      isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-slate-200'
+      isDarkMode ? 'bg-[#1A1A1A] border-white/10' : 'bg-white border-slate-200'
     ]">
       <DialogHeader :class="[
         'sticky top-0 z-10 p-4 sm:p-6 border-b',
-        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-slate-200 bg-white'
+        isDarkMode ? 'border-white/10 bg-[#1A1A1A]' : 'border-slate-200 bg-white'
       ]">
         <DialogTitle :class="[
           'text-xl sm:text-2xl font-semibold',
@@ -224,7 +224,7 @@
 
       <DialogFooter :class="[
         'sticky bottom-0 z-10 p-4 sm:p-6 border-t',
-        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-slate-200 bg-white'
+        isDarkMode ? 'border-white/10 bg-[#1A1A1A]' : 'border-slate-200 bg-white'
       ]">
         <Button
             class="w-full bg-emerald-500 hover:bg-emerald-600 text-white"

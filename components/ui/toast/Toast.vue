@@ -71,7 +71,7 @@
     const isDark = true; // TODO: récupérer depuis le store settings
     
     const baseClasses = isDark 
-      ? 'border-gray-700 text-white' 
+      ? 'border-white/10 text-white' 
       : 'border-gray-200 text-gray-900';
 
     switch (props.notification.type) {

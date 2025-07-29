@@ -29,7 +29,7 @@
           <Button 
             variant="outline" 
             class="w-full justify-between h-auto min-h-[2.5rem] p-2"
-            :class="isDarkMode ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'"
+            :class="isDarkMode ? 'border-white/10 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-50'"
           >
             <div class="flex items-center gap-2">
               <Tag class="h-4 w-4 opacity-50" />
@@ -42,16 +42,16 @@
         </PopoverTrigger>
         
         <PopoverContent class="w-80 p-0" align="start">
-          <div :class="isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'">
+          <div :class="isDarkMode ? 'bg-[#1A1A1A] border-white/10' : 'bg-white border-gray-200'">
             <!-- Recherche/Création -->
-            <div class="p-2 border-b" :class="isDarkMode ? 'border-gray-700' : 'border-gray-200'">
+            <div class="p-2 border-b" :class="isDarkMode ? 'border-white/10' : 'border-gray-200'">
               <div class="relative">
                 <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   v-model="searchQuery"
                   placeholder="Rechercher ou créer un tag..."
                   class="pl-8"
-                  :class="isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'"
+                  :class="isDarkMode ? 'bg-gray-800 border-white/10' : 'bg-white border-gray-300'"
                   @keydown.enter.prevent="handleEnter"
                 />
               </div>
